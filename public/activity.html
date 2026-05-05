@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunLog — Activity</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&family=Syne+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --bg: #080810; --surface: #10101a; --card: #16162a;
+  --border: #252540; --accent: #FC4C02; --blue: #3a7bff;
+  --green: #00e5a0; --yellow: #ffd166; --purple: #a78bfa;
+  --text: #f0f0ff; --soft: #9090b0; --muted: #505070;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+.sidebar { position: fixed; left:0; top:0; width: 220px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; color: var(--accent); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+.sidebar-nav { padding: 16px 0; flex: 1; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; color: var(--soft); font-size: 13px; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(252,76,2,0.06); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+.athlete-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff7b3a); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; overflow: hidden; }
+.athlete-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.main { margin-left: 220px; flex: 1; padding: 32px 28px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; }
+.page-title span { color: var(--accent); }
+.section-tag { font-family: 'Syne Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--soft); font-size: 13px; font-weight: 600; text-decoration: none; padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; }
+.back-btn:hover { color: var(--text); border-color: var(--accent); }
+.overview-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
+.overview-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; transition: transform 0.2s; }
+.overview-card:hover { transform: translateY(-2px); }
+.ov-icon { font-size: 20px; margin-bottom: 10px; }
+.ov-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 26px; line-height: 1; }
+.ov-val .ov-unit { font-size: 13px; font-weight: 400; color: var(--soft); margin-left: 3px; }
+.ov-label { font-size: 11px; color: var(--muted); margin-top: 5px; letter-spacing: 0.5px; text-transform: uppercase; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+.panel-tag { font-size: 10px; color: var(--muted); font-family: 'Syne Mono', monospace; }
+.panel-body { padding: 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+#runMap { height: 400px; width: 100%; }
+.map-info { padding: 14px 20px; display: flex; gap: 24px; flex-wrap: wrap; border-top: 1px solid var(--border); }
+.map-info-item { }
+.map-info-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.map-info-val { font-size: 13px; font-weight: 600; margin-top: 2px; }
+.splits-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.splits-table th { text-align: left; padding: 10px 12px; color: var(--muted); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid var(--border); background: var(--surface); }
+.splits-table td { padding: 11px 12px; border-bottom: 1px solid rgba(37,37,64,0.5); color: var(--soft); font-family: 'Syne Mono', monospace; font-size: 12px; }
+.splits-table tr:last-child td { border-bottom: none; }
+.splits-table tr:hover td { background: rgba(255,255,255,0.02); color: var(--text); }
+.best { color: var(--green) !important; }
+.worst { color: var(--accent) !important; }
+.badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.badge-green { background: rgba(0,229,160,0.15); color: var(--green); }
+.badge-orange { background: rgba(252,76,2,0.15); color: var(--accent); }
+.badge-blue { background: rgba(58,123,255,0.15); color: var(--blue); }
+.loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--muted); font-size: 13px; gap: 10px; }
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.fade-up { animation: fadeUp 0.4s ease forwards; }
+.leaflet-container { background: #0a0a14; }
+.leaflet-tile { filter: brightness(0.6) saturate(0.5) hue-rotate(200deg); }
+@media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; padding: 20px 16px; } .overview-grid { grid-template-columns: 1fr 1fr; } .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">RUNLOG</div>
+    <div class="logo-sub">ABHINAV'S RUNNING HUB</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a href="/activities" class="nav-item active"><span class="nav-icon">🏃</span> Activities</a>
+    <a href="/analytics" class="nav-item"><span class="nav-icon">📊</span> Analytics</a>
+    <a href="/routes" class="nav-item"><span class="nav-icon">🗺️</span> Routes</a>
+    <a href="/goals" class="nav-item"><span class="nav-icon">🎯</span> Goals</a>
+    <a href="/planner" class="nav-item"><span class="nav-icon">✨</span> AI Planner</a>
+    <a href="/shoes" class="nav-item"><span class="nav-icon">👟</span> Shoe Tracker</a>
+    <a href="/journal" class="nav-item"><span class="nav-icon">📓</span> Run Journal</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="athlete-avatar" id="avatarEl">A</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;" id="athleteName">Abhinav</div>
+        <div style="font-size:10px;color:var(--muted);">Runner</div>
+      </div>
+    </div>
+    <a href="/api/logout" style="display:block;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:none;">↩ Logout</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+    </div>
+    <span class="badge badge-orange" id="activityType">Run</span>
+  </div>
+
+  <div style="margin-bottom:20px;">
+    <div class="section-tag">Activity Detail</div>
+    <div class="page-title" id="activityName"><span>Loading...</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-top:4px;" id="activityDate"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="overview-grid" id="statsGrid">
+    <div class="overview-card"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="overview-card"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="overview-card"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="overview-card"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="overview-card"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Route Map</div>
+      <div class="panel-tag" id="mapTag">LOADING...</div>
+    </div>
+    <div id="runMap"></div>
+    <div class="map-info" id="mapInfo"></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Elevation Profile</div>
+        <div class="panel-tag">METRES</div>
+      </div>
+      <div class="panel-body">
+        <canvas id="elevChart" height="120"></canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Pace per KM</div>
+        <div class="panel-tag">MIN/KM</div>
+      </div>
+      <div class="panel-body">
+        <canvas id="paceChart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPLITS -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">KM Splits</div>
+      <span class="badge badge-green" id="splitsBadge">Loading...</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="splits-table" id="splitsTable">
+        <thead><tr><th>KM</th><th>Time</th><th>Pace</th><th>Elevation</th><th></th></tr></thead>
+        <tbody id="splitsBody"><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ANALYSIS -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Run Analysis</div>
+    </div>
+    <div class="panel-body" id="analysisContent">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const MAPTILER_KEY = 'bCtHHQu0V5T0XCCVBhEF';
+
+function getParams() {
+  return new URLSearchParams(window.location.search);
+}
+
+function formatPace(mps) {
+  if (!mps) return '—';
+  const mpk = 1000 / (mps * 60);
+  const m = Math.floor(mpk);
+  const s = Math.round((mpk - m) * 60);
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function formatDist(m) { return (m/1000).toFixed(2); }
+
+function formatTime(s) {
+  const h = Math.floor(s/3600);
+  const m = Math.floor((s%3600)/60);
+  const sec = s % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m ${sec}s`;
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+function decodePolyline(encoded) {
+  let index = 0, lat = 0, lng = 0;
+  const coords = [];
+  while (index < encoded.length) {
+    let shift = 0, result = 0, byte;
+    do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+    shift = 0; result = 0;
+    do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+    coords.push([lat/1e5, lng/1e5]);
+  }
+  return coords;
+}
+
+let map = null;
+
+function initMap(coords, activity) {
+  if (map) { map.remove(); map = null; }
+  map = L.map('runMap', { zoomControl: true, attributionControl: false });
+
+  L.tileLayer(`https://api.maptiler.com/maps/dataviz-dark/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, {
+    maxZoom: 18,
+    tileSize: 256,
+  }).addTo(map);
+
+  const poly = L.polyline(coords, {
+    color: '#FC4C02',
+    weight: 4,
+    opacity: 0.9,
+    lineJoin: 'round'
+  }).addTo(map);
+
+  const startIcon = L.divIcon({ html: '<div style="background:#00e5a0;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(0,229,160,0.8);"></div>', iconSize:[14,14], iconAnchor:[7,7] });
+  const endIcon = L.divIcon({ html: '<div style="background:#FC4C02;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(252,76,2,0.8);"></div>', iconSize:[14,14], iconAnchor:[7,7] });
+
+  L.marker(coords[0], {icon: startIcon}).addTo(map).bindPopup('🟢 Start');
+  L.marker(coords[coords.length-1], {icon: endIcon}).addTo(map).bindPopup('🔴 Finish');
+
+  map.fitBounds(poly.getBounds(), { padding: [30, 30] });
+
+  document.getElementById('mapTag').textContent = `${activity.location_city || ''} ${activity.location_country || ''}`.trim() || 'GPS ROUTE';
+  document.getElementById('mapInfo').innerHTML = `
+    <div class="map-info-item"><div class="map-info-label">Start</div><div class="map-info-val">🟢 ${new Date(activity.start_date_local).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})}</div></div>
+    <div class="map-info-item"><div class="map-info-label">Distance</div><div class="map-info-val">${formatDist(activity.distance)} km</div></div>
+    <div class="map-info-item"><div class="map-info-label">Elevation Gain</div><div class="map-info-val">↑ ${Math.round(activity.total_elevation_gain)}m</div></div>
+    <div class="map-info-item"><div class="map-info-label">Max Speed</div><div class="map-info-val">${(activity.max_speed * 3.6).toFixed(1)} km/h</div></div>
+    <div class="map-info-item"><div class="map-info-label">Avg Speed</div><div class="map-info-val">${(activity.average_speed * 3.6).toFixed(1)} km/h</div></div>
+  `;
+}
+
+function drawElevChart(elevData) {
+  const canvas = document.getElementById('elevChart');
+  if (!canvas || !elevData.length) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = 120 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const W = canvas.offsetWidth, H = 120;
+  const min = Math.min(...elevData) - 5;
+  const max = Math.max(...elevData) + 5;
+  ctx.clearRect(0, 0, W, H);
+  ctx.beginPath();
+  elevData.forEach((v, i) => {
+    const x = (i / (elevData.length - 1)) * W;
+    const y = H - ((v - min) / (max - min)) * (H - 16) - 8;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#ffd166';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  const lastX = W, lastY = H;
+  ctx.lineTo(lastX, H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,209,102,0.08)';
+  ctx.fill();
+  // Labels
+  ctx.fillStyle = 'rgba(144,144,176,0.6)';
+  ctx.font = '9px Syne Mono, monospace';
+  ctx.fillText(`${Math.round(max)}m`, 4, 12);
+  ctx.fillText(`${Math.round(min)}m`, 4, H - 4);
+}
+
+function drawPaceChart(splits) {
+  const canvas = document.getElementById('paceChart');
+  if (!canvas || !splits.length) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = 120 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const W = canvas.offsetWidth, H = 120;
+  const paces = splits.map(s => s.average_speed > 0 ? 1000 / (s.average_speed * 60) : 0).filter(p => p > 0);
+  if (!paces.length) return;
+  const min = Math.min(...paces) - 0.2;
+  const max = Math.max(...paces) + 0.2;
+  const barW = (W - (paces.length - 1) * 4) / paces.length;
+  ctx.clearRect(0, 0, W, H);
+  paces.forEach((v, i) => {
+    const x = i * (barW + 4);
+    const h = ((v - min) / (max - min)) * (H - 20) + 10;
+    const y = H - h - 16;
+    const isMin = v === Math.min(...paces);
+    const grad = ctx.createLinearGradient(0, y, 0, H);
+    grad.addColorStop(0, isMin ? 'rgba(0,229,160,0.9)' : 'rgba(252,76,2,0.9)');
+    grad.addColorStop(1, isMin ? 'rgba(0,229,160,0.2)' : 'rgba(252,76,2,0.2)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, h, 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(144,144,176,0.7)';
+    ctx.font = '8px Syne Mono, monospace';
+    ctx.textAlign = 'center';
+    const m = Math.floor(v);
+    const s = Math.round((v - m) * 60);
+    ctx.fillText(`${m}:${String(s).padStart(2,'0')}`, x + barW/2, H - 2);
+  });
+}
+
+function renderSplits(splits) {
+  const tbody = document.getElementById('splitsBody');
+  if (!splits.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);padding:16px;">No split data</td></tr>'; return; }
+  const paces = splits.map(s => s.average_speed > 0 ? 1000/(s.average_speed*60) : 999);
+  const bestPace = Math.min(...paces);
+  const worstPace = Math.max(...paces.filter(p => p < 99));
+  document.getElementById('splitsBadge').textContent = `${splits.length} km splits`;
+  tbody.innerHTML = splits.map((s, i) => {
+    const pace = s.average_speed > 0 ? 1000/(s.average_speed*60) : 0;
+    const pm = Math.floor(pace); const ps = Math.round((pace-pm)*60);
+    const paceStr = pace > 0 ? `${pm}:${String(ps).padStart(2,'0')}/km` : '—';
+    const isBest = Math.abs(pace - bestPace) < 0.01;
+    const isWorst = Math.abs(pace - worstPace) < 0.01;
+    const elev = s.total_elevation_gain ? `+${Math.round(s.total_elevation_gain)}m` : '—';
+    const feel = pace < 5 ? '🔥' : pace < 5.5 ? '⚡' : pace < 6.5 ? '😊' : '😤';
+    return `<tr>
+      <td style="color:var(--text);font-weight:600;">KM ${i+1}</td>
+      <td>${formatTime(s.elapsed_time)}</td>
+      <td class="${isBest?'best':isWorst?'worst':''}">${paceStr}</td>
+      <td>${elev}</td>
+      <td>${feel}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAnalysis(activity, splits) {
+  const avgPace = formatPace(activity.average_speed);
+  const maxPace = formatPace(activity.max_speed);
+  const paces = splits.map(s => s.average_speed > 0 ? 1000/(s.average_speed*60) : 0).filter(p=>p>0);
+  const variance = paces.length > 1 ? Math.max(...paces) - Math.min(...paces) : 0;
+  const consistency = variance < 0.5 ? 'Excellent' : variance < 1 ? 'Good' : variance < 1.5 ? 'Moderate' : 'Variable';
+  const consistencyColor = variance < 0.5 ? 'var(--green)' : variance < 1 ? 'var(--blue)' : variance < 1.5 ? 'var(--yellow)' : 'var(--accent)';
+
+  document.getElementById('analysisContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Avg Pace</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:24px;color:var(--accent);margin-top:4px;">${avgPace}</div>
+        <div style="font-size:10px;color:var(--muted);">min/km</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Pace Consistency</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:24px;color:${consistencyColor};margin-top:4px;">${consistency}</div>
+        <div style="font-size:10px;color:var(--muted);">±${variance.toFixed(2)} min/km</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Elevation</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:24px;color:var(--yellow);margin-top:4px;">↑${Math.round(activity.total_elevation_gain)}m</div>
+        <div style="font-size:10px;color:var(--muted);">total gain</div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--soft);line-height:1.8;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
+      <strong style="color:var(--text);">Run Summary:</strong> You covered ${formatDist(activity.distance)} km at an average pace of ${avgPace}/km. 
+      Your pace consistency was <strong style="color:${consistencyColor};">${consistency.toLowerCase()}</strong> with a variation of ${variance.toFixed(2)} min/km across splits.
+      ${activity.total_elevation_gain > 50 ? `You tackled ${Math.round(activity.total_elevation_gain)}m of elevation gain — solid hilly run.` : 'Relatively flat route — good for building pace.'}
+      ${variance < 0.5 ? ' Excellent pacing discipline — very even effort throughout.' : variance > 1.5 ? ' Wide pace variation — try to start slower and negative split next time.' : ' Decent pacing — keep working on even effort distribution.'}
+    </div>
+  `;
+}
+
+async function loadActivity() {
+  const params = getParams();
+  const id = params.get('id');
+  if (!id) { window.location.href = '/dashboard'; return; }
+
+  try {
+    // Load activity details
+    const res = await fetch(`/api/activities/${id}`);
+    if (!res.ok) throw new Error();
+    const activity = await res.json();
+
+    // Update header
+    document.getElementById('activityName').innerHTML = `<span>${activity.name}</span>`;
+    document.getElementById('activityDate').textContent = formatDate(activity.start_date_local);
+    document.getElementById('activityType').textContent = activity.type || 'Run';
+
+    // Stats grid
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="overview-card fade-up">
+        <div class="ov-icon">📏</div>
+        <div class="ov-val">${formatDist(activity.distance)}<span class="ov-unit">km</span></div>
+        <div class="ov-label">Distance</div>
+      </div>
+      <div class="overview-card fade-up" style="animation-delay:0.05s">
+        <div class="ov-icon">⏱️</div>
+        <div class="ov-val">${formatTime(activity.moving_time)}</div>
+        <div class="ov-label">Moving Time</div>
+      </div>
+      <div class="overview-card fade-up" style="animation-delay:0.1s">
+        <div class="ov-icon">⚡</div>
+        <div class="ov-val">${formatPace(activity.average_speed)}<span class="ov-unit">/km</span></div>
+        <div class="ov-label">Avg Pace</div>
+      </div>
+      <div class="overview-card fade-up" style="animation-delay:0.15s">
+        <div class="ov-icon">⛰️</div>
+        <div class="ov-val">${Math.round(activity.total_elevation_gain)}<span class="ov-unit">m</span></div>
+        <div class="ov-label">Elevation</div>
+      </div>
+      <div class="overview-card fade-up" style="animation-delay:0.2s">
+        <div class="ov-icon">🔥</div>
+        <div class="ov-val">${activity.kilojoules ? Math.round(activity.kilojoules * 0.239) : '—'}<span class="ov-unit">cal</span></div>
+        <div class="ov-label">Calories</div>
+      </div>
+    `;
+
+    // Map from polyline
+    if (activity.map && activity.map.summary_polyline) {
+      const coords = decodePolyline(activity.map.summary_polyline);
+      if (coords.length > 0) initMap(coords, activity);
+    } else {
+      document.getElementById('runMap').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:13px;">No GPS data for this activity</div>';
+    }
+
+    // Splits
+    if (activity.splits_metric) {
+      renderSplits(activity.splits_metric);
+      drawPaceChart(activity.splits_metric);
+    }
+
+    // Elevation from laps or estimate
+    const elevData = activity.splits_metric ? activity.splits_metric.map(s => s.elevation_difference || 0) : [];
+    if (elevData.length) drawElevChart(elevData);
+
+    // Analysis
+    renderAnalysis(activity, activity.splits_metric || []);
+
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+// Load athlete avatar
+async function loadAthlete() {
+  try {
+    const res = await fetch('/api/athlete');
+    if (!res.ok) return;
+    const athlete = await res.json();
+    if (athlete.profile_medium) {
+      document.getElementById('avatarEl').innerHTML = `<img src="${athlete.profile_medium}">`;
+    }
+  } catch(e) {}
+}
+
+loadActivity();
+loadAthlete();
+</script>
+</body>
+</html>

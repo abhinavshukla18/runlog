@@ -1,19 +1,22 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/*.js",
-      "use": "@vercel/node"
-    }
-  ],
+  {
+    "src": "api/**/*.js",
+    "use": "@vercel/node"
+  }
+ ],
   "routes": [
     { "src": "/api/auth", "dest": "/api/auth.js" },
     { "src": "/api/callback", "dest": "/api/callback.js" },
     { "src": "/api/athlete", "dest": "/api/athlete.js" },
+    { "src": "/api/activities/([^/]+)", "dest": "/api/activities/[id].js" },
     { "src": "/api/activities", "dest": "/api/activities.js" },
     { "src": "/api/stats", "dest": "/api/stats.js" },
     { "src": "/api/logout", "dest": "/api/logout.js" },
     { "src": "/dashboard", "dest": "/api/dashboard.js" },
-    { "src": "/", "dest": "/api/index.js" }
+    { "src": "/", "dest": "/api/index.js" },
+    { "src": "/activity", "dest": "/api/activity.js" }
+    
   ]
 }
