@@ -17,11 +17,11 @@ module.exports = async (req, res) => {
 
     const { access_token, refresh_token, athlete } = response.data;
 
-    res.setHeader('Set-Cookie', [
-      `access_token=${access_token}; Path=/; HttpOnly; Secure; SameSite=Lax`,
-      `refresh_token=${refresh_token}; Path=/; HttpOnly; Secure; SameSite=Lax`,
-      `athlete=${encodeURIComponent(JSON.stringify(athlete))}; Path=/; Secure; SameSite=Lax`
-    ]);
+   res.setHeader('Set-Cookie', [
+  `access_token=${access_token}; Path=/; Max-Age=21600; SameSite=Lax`,
+  `refresh_token=${refresh_token}; Path=/; Max-Age=2592000; SameSite=Lax`,
+  `athlete=${encodeURIComponent(JSON.stringify(athlete))}; Path=/; Max-Age=21600; SameSite=Lax`
+ ]);
 
     const filePath = path.join(__dirname, '../public/dashboard.html');
     const html = fs.readFileSync(filePath, 'utf8');
