@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunLog — Abhinav</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Mulish', sans-serif;
+  background: #080810;
+  color: #f0f0ff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.bg-glow {
+  position: fixed;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(252,76,2,0.08) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.login-wrap {
+  text-align: center;
+  padding: 40px 20px;
+  animation: fadeUp 0.6s ease forwards;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 52px;
+  letter-spacing: 6px;
+  color: #FC4C02;
+  margin-bottom: 8px;
+}
+.logo-sub {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #505070;
+  text-transform: uppercase;
+  margin-bottom: 60px;
+}
+.welcome {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+.welcome-sub {
+  font-size: 14px;
+  color: #9090b0;
+  max-width: 340px;
+  margin: 0 auto 48px;
+  line-height: 1.7;
+}
+.strava-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #FC4C02;
+  color: white;
+  text-decoration: none;
+  padding: 16px 36px;
+  border-radius: 10px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  box-shadow: 0 8px 32px rgba(252,76,2,0.3);
+}
+.strava-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(252,76,2,0.4);
+  background: #ff6a1f;
+}
+.strava-icon { font-size: 20px; }
+.features {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  margin-top: 60px;
+  flex-wrap: wrap;
+}
+.feature {
+  text-align: center;
+  color: #505070;
+}
+.feature-icon { font-size: 24px; margin-bottom: 8px; }
+.feature-label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+.error-msg {
+  background: rgba(230,57,70,0.1);
+  border: 1px solid rgba(230,57,70,0.3);
+  color: #e63946;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 24px;
+  display: none;
+}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="login-wrap">
+  <div class="logo">RUNLOG</div>
+  <div class="logo-sub">Abhinav's Personal Running Hub</div>
+  <div class="error-msg" id="errorMsg">Authentication failed. Please try again.</div>
+  <div class="welcome">Your runs. Your data. Your way.</div>
+  <div class="welcome-sub">Connect your Strava account to get detailed stats, route maps, training analytics and AI-powered race planning.</div>
+  <a href="/api/auth" class="strava-btn">
+    <span class="strava-icon">🏃</span>
+    Connect with Strava
+  </a>
+  <div class="features">
+    <div class="feature"><div class="feature-icon">🗺️</div><div class="feature-label">Route Maps</div></div>
+    <div class="feature"><div class="feature-icon">📊</div><div class="feature-label">Analytics</div></div>
+    <div class="feature"><div class="feature-icon">🎯</div><div class="feature-label">AI Planner</div></div>
+    <div class="feature"><div class="feature-icon">⚡</div><div class="feature-label">Live Splits</div></div>
+    <div class="feature"><div class="feature-icon">🏆</div><div class="feature-label">PRs & Goals</div></div>
+    <div class="feature"><div class="feature-icon">🔥</div><div class="feature-label">Streaks</div></div>
+  </div>
+</div>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('error')) document.getElementById('errorMsg').style.display = 'block';
+  const athlete = document.cookie.split(';').find(c => c.trim().startsWith('athlete='));
+  if (athlete) window.location.href = '/dashboard';
+</script>
+</body>
+</html>

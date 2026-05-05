@@ -1,0 +1,31 @@
+{
+  "name": "runlog",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "scripts": {
+    "start": "node api/server.js",
+    "dev": "node api/server.js"
+},
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abhinavshukla18/runlog.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/abhinavshukla18/runlog/issues"
+  },
+  "homepage": "https://github.com/abhinavshukla18/runlog#readme",
+  "dependencies": {
+    "axios": "^1.16.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
