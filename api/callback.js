@@ -1,4 +1,6 @@
 const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
 
 module.exports = async (req, res) => {
   const { code } = req.query;
@@ -15,14 +17,17 @@ module.exports = async (req, res) => {
 
     const { access_token, refresh_token, athlete } = response.data;
 
-    // Store in cookies
     res.setHeader('Set-Cookie', [
       `access_token=${access_token}; Path=/; HttpOnly; Secure; SameSite=Lax`,
       `refresh_token=${refresh_token}; Path=/; HttpOnly; Secure; SameSite=Lax`,
       `athlete=${encodeURIComponent(JSON.stringify(athlete))}; Path=/; Secure; SameSite=Lax`
     ]);
 
-    res.redirect('/dashboard');
+    const filePath = path.join(__dirname, '../public/dashboard.html');
+    const html = fs.readFileSync(filePath, 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+
   } catch (err) {
     console.error(err.response?.data || err.message);
     res.redirect('/?error=auth_failed');
