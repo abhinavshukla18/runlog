@@ -412,7 +412,7 @@ async function loadAthlete() {
       document.getElementById('avatarEl').textContent = athlete.firstname?.[0] || 'A';
     }
   } catch (e) {
-    window.location.href = '/';
+    console.log('Auth error:', e);
   }
 }
 
