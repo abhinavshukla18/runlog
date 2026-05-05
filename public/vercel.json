@@ -16,7 +16,7 @@
     { "src": "/api/logout", "dest": "/api/logout.js" },
     { "src": "/dashboard", "dest": "/api/dashboard.js" },
     { "src": "/", "dest": "/api/index.js" },
-    { "src": "/activity", "dest": "/api/activity.js" }
+    { "src": "/activity(.*)", "dest": "/api/activity.js" }
     
   ]
 }
