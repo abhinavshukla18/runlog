@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunLog — Goals</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810; --surface: #10101a; --card: #16162a;
+  --border: #252540; --accent: #FC4C02; --blue: #3a7bff;
+  --green: #00e5a0; --yellow: #ffd166; --purple: #a78bfa;
+  --text: #f0f0ff; --soft: #9090b0; --muted: #505070;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+.sidebar { position: fixed; left:0; top:0; width: 220px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; color: var(--accent); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+.sidebar-nav { padding: 16px 0; flex: 1; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; color: var(--soft); font-size: 13px; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(252,76,2,0.06); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+.athlete-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff7b3a); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; overflow: hidden; }
+.athlete-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.main { margin-left: 220px; flex: 1; padding: 32px 28px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; }
+.page-title span { color: var(--accent); }
+.section-tag { font-family: 'Syne Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+.panel-body { padding: 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #ff6a1f; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(252,76,2,0.3); }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--soft); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-sm { padding: 6px 12px; font-size: 11px; }
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 11px; color: var(--soft); letter-spacing: 0.5px; margin-bottom: 6px; display: block; font-weight: 600; text-transform: uppercase; }
+.form-input, .form-select { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Mulish', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
+.form-input:focus, .form-select:focus { border-color: var(--accent); }
+.form-select option { background: var(--card); }
+.badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.badge-green { background: rgba(0,229,160,0.15); color: var(--green); }
+.badge-orange { background: rgba(252,76,2,0.15); color: var(--accent); }
+.badge-blue { background: rgba(58,123,255,0.15); color: var(--blue); }
+.badge-yellow { background: rgba(255,209,102,0.15); color: var(--yellow); }
+.badge-red { background: rgba(230,57,70,0.15); color: #e63946; }
+
+/* GOAL CARD */
+.goal-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.goal-card:hover { border-color: #353555; }
+.goal-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+.goal-card.completed::before { background: var(--green); }
+.goal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.goal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 3px; }
+.goal-subtitle { font-size: 11px; color: var(--muted); }
+.goal-progress-wrap { margin-bottom: 10px; }
+.goal-progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--soft); margin-bottom: 5px; }
+.goal-progress-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.goal-progress-fill { height: 100%; border-radius: 4px; transition: width 1s ease; background: var(--accent); }
+.goal-progress-fill.completed { background: var(--green); }
+.goal-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+.goal-meta-item { font-size: 11px; color: var(--muted); }
+.goal-meta-item strong { color: var(--text); display: block; font-size: 13px; }
+
+/* STREAK */
+.streak-display { text-align: center; padding: 24px; }
+.streak-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 80px; color: var(--accent); line-height: 1; }
+.streak-label { font-size: 13px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 2px; }
+.streak-grid { display: flex; gap: 3px; flex-wrap: wrap; padding: 0 20px 16px; }
+.streak-day { width: 24px; height: 24px; border-radius: 4px; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--muted); }
+.streak-day.ran { background: rgba(252,76,2,0.3); color: var(--accent); border: 1px solid rgba(252,76,2,0.4); }
+.streak-day.today { background: var(--accent); color: white; box-shadow: 0 0 10px rgba(252,76,2,0.5); }
+
+/* WEEKLY TARGET */
+.weekly-target-display { padding: 20px; }
+.target-circle-wrap { display: flex; justify-content: center; margin-bottom: 16px; }
+.target-progress { position: relative; width: 140px; height: 140px; }
+.target-progress svg { transform: rotate(-90deg); }
+.target-progress-bg { fill: none; stroke: var(--border); stroke-width: 10; }
+.target-progress-fill { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+.target-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+.target-pct { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; color: var(--accent); }
+.target-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* COUNTDOWN */
+.countdown-item { text-align: center; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.countdown-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 36px; color: var(--accent); line-height: 1; }
+.countdown-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+.countdowns-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+
+.loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--muted); font-size: 13px; gap: 10px; }
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 440px; margin: 20px; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 20px; }
+
+@media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; padding: 20px 16px; } .two-col { grid-template-columns: 1fr; } .countdowns-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">RUNLOG</div>
+    <div class="logo-sub">ABHINAV'S RUNNING HUB</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a href="/activities" class="nav-item"><span class="nav-icon">🏃</span> Activities</a>
+    <a href="/analytics" class="nav-item"><span class="nav-icon">📊</span> Analytics</a>
+    <a href="/routes" class="nav-item"><span class="nav-icon">🗺️</span> Routes</a>
+    <a href="/goals" class="nav-item active"><span class="nav-icon">🎯</span> Goals</a>
+    <a href="/planner" class="nav-item"><span class="nav-icon">✨</span> AI Planner</a>
+    <a href="/shoes" class="nav-item"><span class="nav-icon">👟</span> Shoe Tracker</a>
+    <a href="/journal" class="nav-item"><span class="nav-icon">📓</span> Run Journal</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="athlete-avatar" id="avatarEl">A</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;" id="athleteName">Abhinav</div>
+        <div style="font-size:10px;color:var(--muted);">Runner</div>
+      </div>
+    </div>
+    <a href="/api/logout" style="display:block;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:none;">↩ Logout</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="section-tag">Targets</div>
+      <div class="page-title">Goals & <span>Streaks</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal()">+ Add Goal</button>
+  </div>
+
+  <!-- STREAK + WEEKLY TARGET -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Current Streak 🔥</div>
+        <span class="badge badge-orange" id="streakBadge">Loading...</span>
+      </div>
+      <div class="streak-display" id="streakDisplay">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+      <div class="streak-grid" id="streakGrid"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Weekly Target</div>
+        <button class="btn btn-outline btn-sm" onclick="setWeeklyTarget()">Edit</button>
+      </div>
+      <div class="weekly-target-display" id="weeklyTargetDisplay">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RACE COUNTDOWNS -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Race Countdowns ⏱️</div>
+      <button class="btn btn-outline btn-sm" onclick="openModal()">+ Add Race</button>
+    </div>
+    <div class="panel-body" id="countdownsContent">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ACTIVE GOALS -->
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <div class="section-tag">Active</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;">Your Goals</div>
+      </div>
+    </div>
+    <div id="goalsList">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</main>
+
+<!-- ADD GOAL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">Add New Goal</div>
+    <div class="form-group">
+      <label class="form-label">Goal Type</label>
+      <select class="form-select" id="goalTypeInput">
+        <option value="race">Race / Event</option>
+        <option value="distance">Distance Goal</option>
+        <option value="pace">Pace Goal</option>
+        <option value="weekly">Weekly KM Target</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Goal Name</label>
+      <input type="text" class="form-input" id="goalNameInput" placeholder="e.g. Run a Sub-25 5K">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Target Date</label>
+      <input type="date" class="form-input" id="goalDateInput">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Target Value (km, pace, etc.)</label>
+      <input type="text" class="form-input" id="goalValueInput" placeholder="e.g. 25:00, 42.2, 5:00/km">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveGoal()" style="flex:1;">Save Goal</button>
+      <button class="btn btn-outline" onclick="document.getElementById('modalOverlay').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== LOCAL STORAGE FOR GOALS =====
+function getGoals() {
+  try { return JSON.parse(localStorage.getItem('runlog_goals') || '[]'); } catch { return []; }
+}
+
+function saveGoals(goals) {
+  localStorage.setItem('runlog_goals', JSON.stringify(goals));
+}
+
+function getWeeklyTarget() {
+  return parseFloat(localStorage.getItem('runlog_weekly_target') || '20');
+}
+
+// ===== MODAL =====
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  // Set default date to 30 days from now
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  document.getElementById('goalDateInput').value = d.toISOString().split('T')[0];
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+function saveGoal() {
+  const name = document.getElementById('goalNameInput').value.trim();
+  const date = document.getElementById('goalDateInput').value;
+  const type = document.getElementById('goalTypeInput').value;
+  const value = document.getElementById('goalValueInput').value.trim();
+  if (!name || !date) { alert('Please fill in name and date!'); return; }
+  const goals = getGoals();
+  goals.push({ id: Date.now(), name, date, type, value, created: new Date().toISOString(), completed: false });
+  saveGoals(goals);
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('goalNameInput').value = '';
+  document.getElementById('goalValueInput').value = '';
+  renderGoals(window._activities || []);
+  renderCountdowns();
+}
+
+function deleteGoal(id) {
+  const goals = getGoals().filter(g => g.id !== id);
+  saveGoals(goals);
+  renderGoals(window._activities || []);
+  renderCountdowns();
+}
+
+function toggleGoal(id) {
+  const goals = getGoals().map(g => g.id === id ? {...g, completed: !g.completed} : g);
+  saveGoals(goals);
+  renderGoals(window._activities || []);
+}
+
+function setWeeklyTarget() {
+  const target = prompt('Set weekly km target:', getWeeklyTarget());
+  if (target && !isNaN(target)) {
+    localStorage.setItem('runlog_weekly_target', target);
+    renderWeeklyTarget(window._activities || []);
+  }
+}
+
+// ===== STREAK =====
+function renderStreak(activities) {
+  const dates = new Set(activities.map(a => a.start_date_local.split('T')[0]));
+  const today = new Date();
+  let streak = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    if (dates.has(ds)) streak++;
+    else if (i > 0) break;
+  }
+  document.getElementById('streakBadge').textContent = `🔥 ${streak} days`;
+  document.getElementById('streakDisplay').innerHTML = `
+    <div class="streak-num">${streak}</div>
+    <div class="streak-label">Day Streak</div>
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);">
+      ${streak === 0 ? 'Go for a run to start your streak!' : streak < 3 ? 'Keep it up! Streak building 💪' : streak < 7 ? 'Great consistency! 🔥' : 'LEGEND STATUS 🏆'}
+    </div>
+  `;
+
+  // Grid
+  const cells = [];
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    const isToday = i === 0;
+    const ran = dates.has(ds);
+    cells.push(`<div class="streak-day ${ran?'ran':''} ${isToday?'today':''}" title="${ds}">${d.getDate()}</div>`);
+  }
+  document.getElementById('streakGrid').innerHTML = cells.join('');
+}
+
+// ===== WEEKLY TARGET =====
+function renderWeeklyTarget(activities) {
+  const target = getWeeklyTarget();
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - now.getDay() + 1);
+  monday.setHours(0,0,0,0);
+  const weekKm = activities
+    .filter(a => new Date(a.start_date_local) >= monday)
+    .reduce((s, a) => s + a.distance/1000, 0);
+  const pct = Math.min(100, Math.round((weekKm / target) * 100));
+  const circumference = 2 * Math.PI * 60;
+  const offset = circumference - (pct / 100) * circumference;
+
+  document.getElementById('weeklyTargetDisplay').innerHTML = `
+    <div class="target-circle-wrap">
+      <div class="target-progress">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="target-progress-bg" cx="70" cy="70" r="60"/>
+          <circle class="target-progress-fill" cx="70" cy="70" r="60"
+            stroke-dasharray="${circumference}"
+            stroke-dashoffset="${offset}"
+            stroke="${pct >= 100 ? 'var(--green)' : 'var(--accent)'}"/>
+        </svg>
+        <div class="target-center">
+          <div class="target-pct" style="color:${pct>=100?'var(--green)':'var(--accent)'};">${pct}%</div>
+          <div class="target-sub">${weekKm.toFixed(1)}/${target}km</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:13px;color:var(--soft);">
+        ${pct >= 100 ? '🎉 Weekly target crushed!' : `${(target - weekKm).toFixed(1)} km to go`}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Resets every Monday</div>
+    </div>
+  `;
+}
+
+// ===== COUNTDOWNS =====
+function renderCountdowns() {
+  const goals = getGoals().filter(g => g.type === 'race' && !g.completed);
+  const birthdayRun = { name: '60K Birthday Run 🎂', date: '2026-05-18', type: 'race' };
+  const allEvents = [birthdayRun, ...goals.filter(g => g.type === 'race')];
+
+  if (!allEvents.length) {
+    document.getElementById('countdownsContent').innerHTML = `
+      <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">
+        No upcoming races. <button onclick="openModal()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-weight:600;">Add one →</button>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('countdownsContent').innerHTML = `
+    <div class="countdowns-grid">
+      ${allEvents.slice(0, 3).map(e => {
+        const days = Math.ceil((new Date(e.date) - new Date()) / (1000*60*60*24));
+        return `<div class="countdown-item">
+          <div class="countdown-num" style="color:${days<=7?'#e63946':days<=30?'var(--yellow)':'var(--accent)'};">${Math.max(0,days)}</div>
+          <div class="countdown-label">Days</div>
+          <div style="font-size:12px;font-weight:600;margin-top:8px;color:var(--soft);">${e.name}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">${new Date(e.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ===== GOALS LIST =====
+function renderGoals(activities) {
+  const goals = getGoals();
+  if (!goals.length) {
+    document.getElementById('goalsList').innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:12px;">
+        No goals yet. <button onclick="openModal()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-weight:600;">Add your first goal →</button>
+      </div>`;
+    return;
+  }
+
+  const totalKm = activities.reduce((s,a) => s+a.distance/1000, 0);
+
+  document.getElementById('goalsList').innerHTML = goals.map(g => {
+    const daysLeft = Math.ceil((new Date(g.date) - new Date()) / (1000*60*60*24));
+    const isCompleted = g.completed;
+    let progress = 0;
+    let progressLabel = '';
+
+    if (g.type === 'distance') {
+      const target = parseFloat(g.value) || 100;
+      progress = Math.min(100, Math.round((totalKm / target) * 100));
+      progressLabel = `${totalKm.toFixed(0)} / ${target} km`;
+    } else if (g.type === 'race' || g.type === 'pace') {
+      const totalDays = Math.ceil((new Date(g.date) - new Date(g.created)) / (1000*60*60*24));
+      const elapsed = totalDays - daysLeft;
+      progress = Math.min(100, Math.round((elapsed / totalDays) * 100));
+      progressLabel = `${Math.max(0, daysLeft)} days left`;
+    } else {
+      progress = isCompleted ? 100 : 50;
+      progressLabel = isCompleted ? 'Completed!' : 'In progress';
+    }
+
+    return `<div class="goal-card ${isCompleted?'completed':''}">
+      <div class="goal-header">
+        <div>
+          <div class="goal-title">${g.name}</div>
+          <div class="goal-subtitle">${g.type.charAt(0).toUpperCase()+g.type.slice(1)} goal · Target: ${g.value || 'N/A'}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="badge ${isCompleted?'badge-green':daysLeft<7?'badge-red':daysLeft<30?'badge-yellow':'badge-blue'}">${isCompleted?'Done':daysLeft<0?'Overdue':`${daysLeft}d left`}</span>
+          <button onclick="toggleGoal(${g.id})" style="background:none;border:none;cursor:pointer;font-size:16px;" title="${isCompleted?'Mark incomplete':'Mark complete'}">${isCompleted?'↩️':'✅'}</button>
+          <button onclick="deleteGoal(${g.id})" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);" title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div class="goal-progress-wrap">
+        <div class="goal-progress-label">
+          <span>${progressLabel}</span>
+          <span>${progress}%</span>
+        </div>
+        <div class="goal-progress-track">
+          <div class="goal-progress-fill ${isCompleted?'completed':''}" style="width:${progress}%;"></div>
+        </div>
+      </div>
+      <div class="goal-meta">
+        <div class="goal-meta-item"><strong>${new Date(g.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</strong>Target Date</div>
+        <div class="goal-meta-item"><strong>${new Date(g.created).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</strong>Created</div>
+        ${g.type==='race'?`<div class="goal-meta-item"><strong>${Math.max(0,daysLeft)} days</strong>Countdown</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== LOAD DATA =====
+async function loadData() {
+  try {
+    const res = await fetch('/api/activities?per_page=50');
+    if (!res.ok) { window.location.href = '/'; return; }
+    const activities = await res.json();
+    window._activities = activities;
+    renderStreak(activities);
+    renderWeeklyTarget(activities);
+    renderCountdowns();
+    renderGoals(activities);
+  } catch(e) {
+    window.location.href = '/';
+  }
+}
+
+async function loadAthlete() {
+  try {
+    const res = await fetch('/api/athlete');
+    if (!res.ok) return;
+    const athlete = await res.json();
+    document.getElementById('athleteName').textContent = athlete.firstname + ' ' + athlete.lastname;
+    if (athlete.profile_medium) {
+      document.getElementById('avatarEl').innerHTML = `<img src="${athlete.profile_medium}">`;
+    }
+  } catch(e) {}
+}
+
+loadData();
+loadAthlete();
+</script>
+</body>
+</html>

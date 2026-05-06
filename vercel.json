@@ -16,6 +16,7 @@
     { "src": "/dashboard", "dest": "/api/dashboard.js" },
     { "src": "/activity", "dest": "/api/activity.js" },
     { "src": "/analytics", "dest": "/api/analytics.js" },
+    { "src": "/goals", "dest": "/api/goals.js" },
     { "src": "/", "dest": "/api/index.js" }
   ]
 }
