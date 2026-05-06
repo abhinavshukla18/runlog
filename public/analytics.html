@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunLog — Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810; --surface: #10101a; --card: #16162a;
+  --border: #252540; --accent: #FC4C02; --blue: #3a7bff;
+  --green: #00e5a0; --yellow: #ffd166; --purple: #a78bfa;
+  --text: #f0f0ff; --soft: #9090b0; --muted: #505070;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+.sidebar { position: fixed; left:0; top:0; width: 220px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; color: var(--accent); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+.sidebar-nav { padding: 16px 0; flex: 1; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; color: var(--soft); font-size: 13px; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(252,76,2,0.06); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+.athlete-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff7b3a); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; overflow: hidden; }
+.athlete-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.main { margin-left: 220px; flex: 1; padding: 32px 28px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; }
+.page-title span { color: var(--accent); }
+.section-tag { font-family: 'Syne Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+.panel-tag { font-size: 10px; color: var(--muted); font-family: 'Syne Mono', monospace; }
+.panel-body { padding: 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.overview-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; transition: transform 0.2s; }
+.overview-card:hover { transform: translateY(-2px); }
+.ov-icon { font-size: 20px; margin-bottom: 10px; }
+.ov-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; line-height: 1; }
+.ov-val .ov-unit { font-size: 13px; font-weight: 400; color: var(--soft); margin-left: 3px; }
+.ov-label { font-size: 11px; color: var(--muted); margin-top: 5px; letter-spacing: 0.5px; text-transform: uppercase; }
+.ov-change { font-size: 12px; margin-top: 6px; font-weight: 600; }
+.up { color: var(--green); }
+.down { color: var(--accent); }
+.badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.badge-green { background: rgba(0,229,160,0.15); color: var(--green); }
+.badge-orange { background: rgba(252,76,2,0.15); color: var(--accent); }
+.badge-blue { background: rgba(58,123,255,0.15); color: var(--blue); }
+.badge-yellow { background: rgba(255,209,102,0.15); color: var(--yellow); }
+.badge-purple { background: rgba(167,139,250,0.15); color: var(--purple); }
+.loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--muted); font-size: 13px; gap: 10px; }
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.fade-up { animation: fadeUp 0.4s ease forwards; }
+.zone-bar { margin-bottom: 14px; }
+.zone-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+.zone-name { color: var(--soft); font-weight: 600; }
+.zone-pct { font-family: 'Syne Mono', monospace; }
+.zone-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.zone-fill { height: 100%; border-radius: 4px; transition: width 1.2s ease; }
+.pr-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+.pr-row:last-child { border-bottom: none; }
+.pr-dist { font-size: 13px; color: var(--soft); width: 100px; }
+.pr-time { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; color: var(--text); }
+.pr-pace { font-size: 11px; color: var(--muted); }
+.pr-badge { }
+.time-bar { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+.time-slot { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; justify-content: flex-end; }
+.time-slot-bar { width: 100%; border-radius: 3px 3px 0 0; background: var(--accent); opacity: 0.6; min-height: 4px; transition: opacity 0.2s; }
+.time-slot-bar:hover { opacity: 1; }
+.time-slot-bar.best { opacity: 1; box-shadow: 0 0 10px rgba(252,76,2,0.4); }
+.time-slot-label { font-size: 8px; color: var(--muted); }
+@media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; padding: 20px 16px; } .two-col, .three-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">RUNLOG</div>
+    <div class="logo-sub">ABHINAV'S RUNNING HUB</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a href="/activities" class="nav-item"><span class="nav-icon">🏃</span> Activities</a>
+    <a href="/analytics" class="nav-item active"><span class="nav-icon">📊</span> Analytics</a>
+    <a href="/routes" class="nav-item"><span class="nav-icon">🗺️</span> Routes</a>
+    <a href="/goals" class="nav-item"><span class="nav-icon">🎯</span> Goals</a>
+    <a href="/planner" class="nav-item"><span class="nav-icon">✨</span> AI Planner</a>
+    <a href="/shoes" class="nav-item"><span class="nav-icon">👟</span> Shoe Tracker</a>
+    <a href="/journal" class="nav-item"><span class="nav-icon">📓</span> Run Journal</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="athlete-avatar" id="avatarEl">A</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;" id="athleteName">Abhinav</div>
+        <div style="font-size:10px;color:var(--muted);">Runner</div>
+      </div>
+    </div>
+    <a href="/api/logout" style="display:block;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:none;">↩ Logout</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="section-tag">Insights</div>
+      <div class="page-title">Your <span>Analytics</span></div>
+    </div>
+    <span class="badge badge-purple">Last 50 runs</span>
+  </div>
+
+  <!-- KEY METRICS -->
+  <div class="three-col" id="keyMetrics">
+    <div class="overview-card"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="overview-card"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="overview-card"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- FITNESS TREND + PACE ZONES -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Fitness Trend</div>
+        <div class="panel-tag">PACE OVER TIME</div>
+      </div>
+      <div class="panel-body">
+        <canvas id="trendChart" height="160"></canvas>
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);">Lower = faster. Each dot = one run.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Pace Zones</div>
+        <div class="panel-tag">TIME DISTRIBUTION</div>
+      </div>
+      <div class="panel-body" id="paceZones">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREDICTED RACE TIMES -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Predicted Race Times 🏆</div>
+      <div class="panel-tag">BASED ON YOUR FITNESS</div>
+    </div>
+    <div id="racePredictions">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- MONTHLY VOLUME + BEST TIME -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Monthly Volume</div>
+        <div class="panel-tag">KM PER MONTH</div>
+      </div>
+      <div class="panel-body">
+        <canvas id="monthlyChart" height="140"></canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Best Time to Run</div>
+        <div class="panel-tag">YOUR FASTEST HOURS</div>
+      </div>
+      <div class="panel-body" id="bestTimeContent">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRAINING CONSISTENCY -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Training Consistency</div>
+      <div class="panel-tag">LAST 12 WEEKS</div>
+    </div>
+    <div class="panel-body" id="consistencyGrid">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+function formatPace(mps) {
+  if (!mps || mps === 0) return '—';
+  const mpk = 1000 / (mps * 60);
+  const m = Math.floor(mpk);
+  const s = Math.round((mpk - m) * 60);
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function formatTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function paceToMinPerKm(mps) {
+  if (!mps || mps === 0) return 0;
+  return 1000 / (mps * 60);
+}
+
+// Riegel formula for race time prediction
+function riegelPredict(knownDist, knownTime, targetDist) {
+  return knownTime * Math.pow(targetDist / knownDist, 1.06);
+}
+
+function secsToTime(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = Math.round(secs % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+async function loadAnalytics() {
+  try {
+    const res = await fetch('/api/activities?per_page=50');
+    if (!res.ok) throw new Error('Not authenticated');
+    const activities = await res.json();
+    const runs = activities.filter(a => a.type === 'Run' && a.average_speed > 0);
+
+    renderKeyMetrics(runs);
+    renderFitnessTrend(runs);
+    renderPaceZones(runs);
+    renderRacePredictions(runs);
+    renderMonthlyVolume(runs);
+    renderBestTime(runs);
+    renderConsistency(runs);
+  } catch(e) {
+    console.error(e);
+    window.location.href = '/';
+  }
+}
+
+function renderKeyMetrics(runs) {
+  if (!runs.length) return;
+  const recent = runs.slice(0, 10);
+  const older = runs.slice(10, 20);
+  const avgPaceRecent = recent.reduce((s,r) => s + paceToMinPerKm(r.average_speed), 0) / recent.length;
+  const avgPaceOlder = older.length ? older.reduce((s,r) => s + paceToMinPerKm(r.average_speed), 0) / older.length : avgPaceRecent;
+  const paceImproved = avgPaceOlder - avgPaceRecent;
+  const totalDist = runs.reduce((s,r) => s + r.distance, 0) / 1000;
+  const avgDist = totalDist / runs.length;
+  const longestRun = Math.max(...runs.map(r => r.distance)) / 1000;
+
+  const pm = Math.floor(avgPaceRecent);
+  const ps = Math.round((avgPaceRecent - pm) * 60);
+  const imp = Math.abs(paceImproved);
+  const impM = Math.floor(imp);
+  const impS = Math.round((imp - impM) * 60);
+
+  document.getElementById('keyMetrics').innerHTML = `
+    <div class="overview-card fade-up">
+      <div class="ov-icon">⚡</div>
+      <div class="ov-val">${pm}:${String(ps).padStart(2,'0')}<span class="ov-unit">/km</span></div>
+      <div class="ov-label">Current Avg Pace</div>
+      <div class="ov-change ${paceImproved > 0 ? 'up' : 'down'}">${paceImproved > 0 ? '↑' : '↓'} ${impM}:${String(impS).padStart(2,'0')} vs last 10 runs</div>
+    </div>
+    <div class="overview-card fade-up" style="animation-delay:0.1s">
+      <div class="ov-icon">📏</div>
+      <div class="ov-val">${avgDist.toFixed(1)}<span class="ov-unit">km</span></div>
+      <div class="ov-label">Avg Run Distance</div>
+      <div class="ov-change" style="color:var(--soft);">Longest: ${longestRun.toFixed(1)} km</div>
+    </div>
+    <div class="overview-card fade-up" style="animation-delay:0.2s">
+      <div class="ov-icon">🏃</div>
+      <div class="ov-val">${runs.length}<span class="ov-unit">runs</span></div>
+      <div class="ov-label">Runs Analyzed</div>
+      <div class="ov-change" style="color:var(--soft);">${totalDist.toFixed(0)} km total</div>
+    </div>
+  `;
+}
+
+function renderFitnessTrend(runs) {
+  const canvas = document.getElementById('trendChart');
+  if (!canvas || !runs.length) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = 160 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const W = canvas.offsetWidth, H = 160;
+
+  const data = runs.slice(0, 30).reverse().map(r => ({
+    pace: paceToMinPerKm(r.average_speed),
+    date: new Date(r.start_date_local).toLocaleDateString('en-IN', {day:'numeric', month:'short'})
+  })).filter(d => d.pace > 0 && d.pace < 20);
+
+  if (!data.length) return;
+  const paces = data.map(d => d.pace);
+  const min = Math.min(...paces) - 0.3;
+  const max = Math.max(...paces) + 0.3;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  for (let i = 0; i <= 4; i++) {
+    const y = (i / 4) * (H - 30) + 10;
+    ctx.strokeStyle = 'rgba(37,37,64,0.8)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+
+  // Trend line
+  ctx.beginPath();
+  data.forEach((d, i) => {
+    const x = (i / (data.length - 1)) * (W - 20) + 10;
+    const y = H - 30 - ((d.pace - min) / (max - min)) * (H - 50);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = 'rgba(252,76,2,0.4)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Dots
+  data.forEach((d, i) => {
+    const x = (i / (data.length - 1)) * (W - 20) + 10;
+    const y = H - 30 - ((d.pace - min) / (max - min)) * (H - 50);
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#FC4C02';
+    ctx.fill();
+  });
+
+  // Moving average
+  if (data.length >= 5) {
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      if (i < 2 || i > data.length - 3) return;
+      const avg = (data[i-2].pace + data[i-1].pace + d.pace + data[i+1].pace + data[i+2].pace) / 5;
+      const x = (i / (data.length - 1)) * (W - 20) + 10;
+      const y = H - 30 - ((avg - min) / (max - min)) * (H - 50);
+      i === 2 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = 'rgba(0,229,160,0.8)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Labels
+  ctx.fillStyle = 'rgba(144,144,176,0.7)';
+  ctx.font = '9px Syne Mono, monospace';
+  [0, Math.floor(data.length/2), data.length-1].forEach(i => {
+    if (!data[i]) return;
+    const x = (i / (data.length - 1)) * (W - 20) + 10;
+    ctx.fillText(data[i].date, x - 15, H - 5);
+  });
+
+  // Legend
+  ctx.fillStyle = '#FC4C02';
+  ctx.fillRect(W - 100, 8, 10, 3);
+  ctx.fillStyle = 'rgba(144,144,176,0.7)';
+  ctx.font = '9px Mulish, sans-serif';
+  ctx.fillText('Each run', W - 85, 12);
+  ctx.fillStyle = '#00e5a0';
+  ctx.fillRect(W - 100, 20, 10, 3);
+  ctx.fillStyle = 'rgba(144,144,176,0.7)';
+  ctx.fillText('Trend', W - 85, 24);
+}
+
+function renderPaceZones(runs) {
+  let easy = 0, moderate = 0, tempo = 0, hard = 0, total = 0;
+  runs.forEach(r => {
+    const pace = paceToMinPerKm(r.average_speed);
+    const t = r.moving_time;
+    if (pace > 7) easy += t;
+    else if (pace > 6) moderate += t;
+    else if (pace > 5.5) tempo += t;
+    else hard += t;
+    total += t;
+  });
+  if (!total) { document.getElementById('paceZones').innerHTML = '<div style="color:var(--muted);font-size:13px;">Not enough data</div>'; return; }
+  const zones = [
+    { name: 'Easy (>7:00/km)', pct: Math.round(easy/total*100), color: 'var(--blue)', time: formatTime(easy) },
+    { name: 'Moderate (6:00–7:00)', pct: Math.round(moderate/total*100), color: 'var(--green)', time: formatTime(moderate) },
+    { name: 'Tempo (5:30–6:00)', pct: Math.round(tempo/total*100), color: 'var(--yellow)', time: formatTime(tempo) },
+    { name: 'Hard (<5:30/km)', pct: Math.round(hard/total*100), color: 'var(--accent)', time: formatTime(hard) },
+  ];
+  document.getElementById('paceZones').innerHTML = zones.map(z => `
+    <div class="zone-bar">
+      <div class="zone-header">
+        <span class="zone-name">${z.name}</span>
+        <span class="zone-pct" style="color:${z.color}">${z.pct}% · ${z.time}</span>
+      </div>
+      <div class="zone-track"><div class="zone-fill" style="width:${z.pct}%;background:${z.color};"></div></div>
+    </div>
+  `).join('');
+}
+
+function renderRacePredictions(runs) {
+  if (!runs.length) return;
+  // Find best efforts
+  const best5k = runs.filter(r => r.distance >= 4750).sort((a,b) => (a.moving_time/a.distance) - (b.moving_time/b.distance))[0];
+  const best10k = runs.filter(r => r.distance >= 9500).sort((a,b) => (a.moving_time/a.distance) - (b.moving_time/b.distance))[0];
+  const bestHM = runs.filter(r => r.distance >= 20000).sort((a,b) => (a.moving_time/a.distance) - (b.moving_time/b.distance))[0];
+
+  // Use best available data for predictions
+  const baseRun = bestHM || best10k || best5k;
+  if (!baseRun) return;
+
+  const baseDist = baseRun.distance;
+  const baseTime = baseRun.moving_time;
+
+  const predictions = [
+    { dist: '5K', m: 5000 },
+    { dist: '10K', m: 10000 },
+    { dist: 'Half Marathon', m: 21097 },
+    { dist: 'Full Marathon', m: 42195 },
+    { dist: '50K Ultra', m: 50000 },
+  ];
+
+  document.getElementById('racePredictions').innerHTML = predictions.map(p => {
+    const predicted = riegelPredict(baseDist, baseTime, p.m);
+    const pace = predicted / (p.m / 1000);
+    const pm = Math.floor(pace / 60);
+    const ps = Math.round(pace % 60);
+    const isBase = Math.abs(baseDist - p.m) < 500;
+    return `<div class="pr-row">
+      <div class="pr-dist">${p.dist}</div>
+      <div>
+        <div class="pr-time">${secsToTime(predicted)}</div>
+        <div class="pr-pace">${pm}:${String(ps).padStart(2,'0')}/km pace</div>
+      </div>
+      <span class="badge ${isBase ? 'badge-green' : 'badge-blue'}">${isBase ? 'Actual' : 'Predicted'}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMonthlyVolume(runs) {
+  const canvas = document.getElementById('monthlyChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = 140 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const W = canvas.offsetWidth, H = 140;
+
+  const months = {};
+  runs.forEach(r => {
+    const d = new Date(r.start_date_local);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label = d.toLocaleDateString('en-IN', {month:'short', year:'2-digit'});
+    if (!months[key]) months[key] = { label, km: 0 };
+    months[key].km += r.distance / 1000;
+  });
+
+  const sorted = Object.entries(months).sort((a,b) => a[0].localeCompare(b[0])).slice(-6);
+  if (!sorted.length) return;
+
+  const max = Math.max(...sorted.map(([,v]) => v.km));
+  const barW = Math.min(50, (W - (sorted.length+1)*10) / sorted.length);
+  const gap = (W - sorted.length * barW) / (sorted.length + 1);
+
+  ctx.clearRect(0, 0, W, H);
+  sorted.forEach(([,v], i) => {
+    const x = gap + i * (barW + gap);
+    const h = (v.km / max) * (H - 40);
+    const y = H - h - 20;
+    const isLatest = i === sorted.length - 1;
+    const grad = ctx.createLinearGradient(0, y, 0, H - 20);
+    grad.addColorStop(0, isLatest ? 'rgba(252,76,2,0.9)' : 'rgba(58,123,255,0.7)');
+    grad.addColorStop(1, isLatest ? 'rgba(252,76,2,0.2)' : 'rgba(58,123,255,0.2)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, h, 4);
+    ctx.fill();
+    ctx.fillStyle = isLatest ? 'rgba(252,76,2,0.9)' : 'rgba(144,144,176,0.8)';
+    ctx.font = 'bold 10px Syne, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(v.label, x + barW/2, H - 4);
+    ctx.fillStyle = 'rgba(240,240,255,0.8)';
+    ctx.font = '9px Syne Mono, monospace';
+    ctx.fillText(v.km.toFixed(0)+'k', x + barW/2, y - 4);
+  });
+}
+
+function renderBestTime(runs) {
+  const hours = new Array(24).fill(0);
+  const counts = new Array(24).fill(0);
+  runs.forEach(r => {
+    const h = new Date(r.start_date_local.replace('Z', '+05:30')).getHours();
+    hours[h] += paceToMinPerKm(r.average_speed);
+    counts[h]++;
+  });
+  const avgPaceByHour = hours.map((total, h) => counts[h] > 0 ? total / counts[h] : 0);
+  const slots = [
+    { label: 'Early Morning', hours: [4,5,6,7], icon: '🌅' },
+    { label: 'Morning', hours: [7,8,9,10], icon: '☀️' },
+    { label: 'Afternoon', hours: [11,12,13,14,15,16], icon: '🌤️' },
+    { label: 'Evening', hours: [17,18,19,20], icon: '🌆' },
+    { label: 'Night', hours: [21,22,23], icon: '🌙' },
+  ];
+
+  const slotData = slots.map(s => {
+    const paces = s.hours.map(h => avgPaceByHour[h]).filter(p => p > 0);
+    const runCounts = s.hours.reduce((sum, h) => sum + counts[h], 0);
+    const avgPace = paces.length ? paces.reduce((a,b) => a+b,0) / paces.length : 0;
+    return { ...s, avgPace, runCounts };
+  }).filter(s => s.runCounts > 0);
+
+  if (!slotData.length) {
+    document.getElementById('bestTimeContent').innerHTML = '<div style="color:var(--muted);font-size:13px;">Not enough data yet</div>';
+    return;
+  }
+
+  const bestSlot = slotData.reduce((best, s) => s.avgPace < best.avgPace ? s : best, slotData[0]);
+  const maxRuns = Math.max(...slotData.map(s => s.runCounts));
+
+  document.getElementById('bestTimeContent').innerHTML = `
+    <div style="margin-bottom:16px;padding:12px;background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.2);border-radius:8px;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Your fastest time</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:var(--green);margin-top:4px;">${bestSlot.icon} ${bestSlot.label}</div>
+      <div style="font-size:12px;color:var(--soft);margin-top:2px;">${slotData.find(s=>s.label===bestSlot.label)?.runCounts} runs in this slot</div>
+    </div>
+    ${slotData.map(s => `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="font-size:16px;width:24px;">${s.icon}</div>
+        <div style="flex:1;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+            <span style="color:var(--soft);">${s.label}</span>
+            <span style="font-family:'Syne Mono',monospace;color:${s.label===bestSlot.label?'var(--green)':'var(--muted)'};">${s.runCounts} runs</span>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:${(s.runCounts/maxRuns)*100}%;background:${s.label===bestSlot.label?'var(--green)':'var(--accent)'};border-radius:3px;opacity:0.7;"></div>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderConsistency(runs) {
+  const dates = new Set(runs.map(r => r.start_date_local.split('T')[0]));
+  const today = new Date();
+  const cells = [];
+  const weeks = 12;
+
+  for (let w = weeks - 1; w >= 0; w--) {
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (w * 7 + (6 - d)));
+      const ds = date.toISOString().split('T')[0];
+      const ran = dates.has(ds);
+      const isToday = ds === today.toISOString().split('T')[0];
+      cells.push({ ds, ran, isToday, day: date.getDate() });
+    }
+  }
+
+  const totalRanDays = cells.filter(c => c.ran).length;
+  const pct = Math.round((totalRanDays / cells.length) * 100);
+
+  document.getElementById('consistencyGrid').innerHTML = `
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;">
+      ${cells.map(c => `
+        <div style="width:22px;height:22px;border-radius:4px;background:${c.ran ? 'var(--accent)' : 'var(--border)'};opacity:${c.ran ? 1 : 0.5};${c.isToday ? 'box-shadow:0 0 8px rgba(252,76,2,0.6);' : ''}border:${c.isToday ? '1px solid rgba(252,76,2,0.8)' : 'none'};" title="${c.ds}"></div>
+      `).join('')}
+    </div>
+    <div style="display:flex;gap:20px;">
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Consistency</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:24px;color:var(--accent);">${pct}%</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Days Run</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:24px;">${totalRanDays}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Days Tracked</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:24px;">${cells.length}</div>
+      </div>
+    </div>
+  `;
+}
+
+// Load athlete avatar
+async function loadAthlete() {
+  try {
+    const res = await fetch('/api/athlete');
+    if (!res.ok) return;
+    const athlete = await res.json();
+    document.getElementById('athleteName').textContent = athlete.firstname + ' ' + athlete.lastname;
+    if (athlete.profile_medium) {
+      document.getElementById('avatarEl').innerHTML = `<img src="${athlete.profile_medium}">`;
+    }
+  } catch(e) {}
+}
+
+loadAnalytics();
+loadAthlete();
+</script>
+</body>
+</html>
