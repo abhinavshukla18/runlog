@@ -208,7 +208,7 @@ function formatTime(s) {
 }
 
 function formatDate(d) {
-  return new Date(d).toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  return new Date(d).toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Kolkata' });
 }
 
 function decodePolyline(encoded) {
@@ -254,7 +254,7 @@ function initMap(coords, activity) {
 
   document.getElementById('mapTag').textContent = `${activity.location_city || ''} ${activity.location_country || ''}`.trim() || 'GPS ROUTE';
   document.getElementById('mapInfo').innerHTML = `
-    <div class="map-info-item"><div class="map-info-label">Start</div><div class="map-info-val">🟢 ${new Date(activity.start_date_local).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})}</div></div>
+    <div class="map-info-item"><div class="map-info-label">Start</div><div class="map-info-val">🟢 ${new Date(activity.start_date_local).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', timeZone:'Asia/Kolkata'})}</div></div>
     <div class="map-info-item"><div class="map-info-label">Distance</div><div class="map-info-val">${formatDist(activity.distance)} km</div></div>
     <div class="map-info-item"><div class="map-info-label">Elevation Gain</div><div class="map-info-val">↑ ${Math.round(activity.total_elevation_gain)}m</div></div>
     <div class="map-info-item"><div class="map-info-label">Max Speed</div><div class="map-info-val">${(activity.max_speed * 3.6).toFixed(1)} km/h</div></div>
