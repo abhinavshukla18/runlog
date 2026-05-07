@@ -338,7 +338,7 @@ function switchTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   if (name === 'heatmap') setTimeout(initHeatmap, 100);
   if (name === 'compare') setTimeout(initCompare, 100);
-  if (name === 'custom') { renderCustomRoutes(); setTimeout(initDrawMap, 100); 
+  if (name === 'custom') { renderCustomRoutes(); setTimeout(initDrawMap, 100); }
 }
 
 // ===== ROUTE LIBRARY =====
