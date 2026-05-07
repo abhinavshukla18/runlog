@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunLog — Routes</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #080810; --surface: #10101a; --card: #16162a; --border: #252540; --accent: #FC4C02; --text: #f0f0ff; --muted: #505070; --soft: #9090b0; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+.sidebar { position: fixed; left:0; top:0; width: 220px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; color: var(--accent); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+.sidebar-nav { padding: 16px 0; flex: 1; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--soft); font-size: 13px; font-weight: 600; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(252,76,2,0.06); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+.main { margin-left: 220px; flex: 1; padding: 32px 28px; display: flex; align-items: center; justify-content: center; }
+.coming-soon { text-align: center; }
+.coming-icon { font-size: 64px; margin-bottom: 20px; }
+.coming-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; margin-bottom: 10px; }
+.coming-title span { color: var(--accent); }
+.coming-sub { font-size: 14px; color: var(--muted); max-width: 300px; line-height: 1.7; }
+@media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">RUNLOG</div>
+    <div class="logo-sub">ABHINAV'S RUNNING HUB</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a href="/activities" class="nav-item"><span class="nav-icon">🏃</span> Activities</a>
+    <a href="/analytics" class="nav-item"><span class="nav-icon">📊</span> Analytics</a>
+    <a href="/routes" class="nav-item active"><span class="nav-icon">🗺️</span> Routes</a>
+    <a href="/goals" class="nav-item"><span class="nav-icon">🎯</span> Goals</a>
+    <a href="/planner" class="nav-item"><span class="nav-icon">✨</span> AI Planner</a>
+    <a href="/shoes" class="nav-item"><span class="nav-icon">👟</span> Shoe Tracker</a>
+    <a href="/journal" class="nav-item"><span class="nav-icon">📓</span> Run Journal</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="/api/logout" style="font-size:11px;color:var(--muted);text-decoration:none;">↩ Logout</a>
+  </div>
+</aside>
+<main class="main">
+  <div class="coming-soon">
+    <div class="coming-icon">🗺️</div>
+    <div class="coming-title">Routes <span>Coming Soon</span></div>
+    <div class="coming-sub">Route library with heatmap and difficulty ratings — being built in Module 5!</div>
+    <a href="/dashboard" style="display:inline-block;margin-top:24px;padding:12px 24px;background:var(--accent);color:white;text-decoration:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;">← Back to Dashboard</a>
+  </div>
+</main>
+</body>
+</html>

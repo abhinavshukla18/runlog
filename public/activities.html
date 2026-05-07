@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunLog — Activities</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #080810; --surface: #10101a; --card: #16162a; --border: #252540; --accent: #FC4C02; --blue: #3a7bff; --green: #00e5a0; --yellow: #ffd166; --purple: #a78bfa; --text: #f0f0ff; --soft: #9090b0; --muted: #505070; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+.sidebar { position: fixed; left:0; top:0; width: 220px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; color: var(--accent); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+.sidebar-nav { padding: 16px 0; flex: 1; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; color: var(--soft); font-size: 13px; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(252,76,2,0.06); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+.athlete-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff7b3a); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; overflow: hidden; }
+.athlete-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.main { margin-left: 220px; flex: 1; padding: 32px 28px; }
+.page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; margin-bottom: 24px; }
+.page-title span { color: var(--accent); }
+.section-tag { font-family: 'Syne Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+.activity-item { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; text-decoration: none; color: inherit; }
+.activity-item:last-child { border-bottom: none; }
+.activity-item:hover { background: rgba(255,255,255,0.02); }
+.act-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(252,76,2,0.1); border: 1px solid rgba(252,76,2,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.act-info { flex: 1; }
+.act-name { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+.act-meta { font-size: 11px; color: var(--muted); }
+.act-stats { text-align: right; }
+.act-dist { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--accent); }
+.act-pace { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--muted); font-size: 13px; gap: 10px; }
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.load-more { display: block; width: 100%; padding: 14px; background: none; border: none; border-top: 1px solid var(--border); color: var(--accent); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+.load-more:hover { background: rgba(252,76,2,0.05); }
+@media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; padding: 20px 16px; } }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">RUNLOG</div>
+    <div class="logo-sub">ABHINAV'S RUNNING HUB</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a href="/activities" class="nav-item active"><span class="nav-icon">🏃</span> Activities</a>
+    <a href="/analytics" class="nav-item"><span class="nav-icon">📊</span> Analytics</a>
+    <a href="/routes" class="nav-item"><span class="nav-icon">🗺️</span> Routes</a>
+    <a href="/goals" class="nav-item"><span class="nav-icon">🎯</span> Goals</a>
+    <a href="/planner" class="nav-item"><span class="nav-icon">✨</span> AI Planner</a>
+    <a href="/shoes" class="nav-item"><span class="nav-icon">👟</span> Shoe Tracker</a>
+    <a href="/journal" class="nav-item"><span class="nav-icon">📓</span> Run Journal</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="athlete-avatar" id="avatarEl">A</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;" id="athleteName">Abhinav</div>
+        <div style="font-size:10px;color:var(--muted);">Runner</div>
+      </div>
+    </div>
+    <a href="/api/logout" style="display:block;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:none;">↩ Logout</a>
+  </div>
+</aside>
+<main class="main">
+  <div class="section-tag">All Runs</div>
+  <div class="page-title">Your <span>Activities</span></div>
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title" id="actCount">Loading...</div>
+      <div style="font-size:11px;color:var(--muted);font-family:'Syne Mono',monospace;" id="totalKm">—</div>
+    </div>
+    <div id="activitiesList"><div class="loading"><div class="spinner"></div> Loading your runs...</div></div>
+    <button class="load-more" id="loadMoreBtn" style="display:none;" onclick="loadMore()">Load more runs →</button>
+  </div>
+</main>
+<script>
+let page = 1;
+let allActivities = [];
+
+function formatPace(mps) {
+  if (!mps) return '—';
+  const mpk = 1000/(mps*60);
+  const m = Math.floor(mpk);
+  const s = Math.round((mpk-m)*60);
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+function formatDist(m) { return (m/1000).toFixed(2); }
+function formatTime(s) {
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+function formatDate(d) {
+  return new Date(d.replace('Z','+05:30')).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+function getEmoji(type) {
+  return {Run:'🏃',TrailRun:'🌲',VirtualRun:'💻',Treadmill:'🏋️'}[type]||'🏃';
+}
+
+async function loadActivities() {
+  try {
+    const res = await fetch(`/api/activities?per_page=20&page=${page}`);
+    if (!res.ok) { window.location.href='/'; return; }
+    const acts = await res.json();
+    allActivities = [...allActivities, ...acts];
+    renderActivities();
+    document.getElementById('loadMoreBtn').style.display = acts.length === 20 ? 'block' : 'none';
+  } catch(e) { window.location.href='/'; }
+}
+
+function renderActivities() {
+  const totalKm = allActivities.reduce((s,a)=>s+a.distance/1000,0);
+  document.getElementById('actCount').textContent = `${allActivities.length} Activities`;
+  document.getElementById('totalKm').textContent = `${totalKm.toFixed(1)} km total`;
+  document.getElementById('activitiesList').innerHTML = allActivities.map(a => `
+    <a href="/activity?id=${a.id}" class="activity-item">
+      <div class="act-icon">${getEmoji(a.type)}</div>
+      <div class="act-info">
+        <div class="act-name">${a.name}</div>
+        <div class="act-meta">${formatDate(a.start_date_local)} · ${formatTime(a.moving_time)}</div>
+      </div>
+      <div class="act-stats">
+        <div class="act-dist">${formatDist(a.distance)} km</div>
+        <div class="act-pace">${formatPace(a.average_speed)}/km</div>
+      </div>
+    </a>
+  `).join('');
+}
+
+async function loadMore() {
+  page++;
+  await loadActivities();
+}
+
+async function loadAthlete() {
+  try {
+    const res = await fetch('/api/athlete');
+    if (!res.ok) return;
+    const athlete = await res.json();
+    document.getElementById('athleteName').textContent = athlete.firstname+' '+athlete.lastname;
+    if (athlete.profile_medium) document.getElementById('avatarEl').innerHTML=`<img src="${athlete.profile_medium}">`;
+  } catch(e) {}
+}
+
+loadActivities();
+loadAthlete();
+</script>
+</body>
+</html>
