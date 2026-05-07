@@ -4,28 +4,85 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RunLog — Routes</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&family=Syne+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-:root { --bg: #080810; --surface: #10101a; --card: #16162a; --border: #252540; --accent: #FC4C02; --text: #f0f0ff; --muted: #505070; --soft: #9090b0; }
+:root { --bg: #080810; --surface: #10101a; --card: #16162a; --border: #252540; --accent: #FC4C02; --blue: #3a7bff; --green: #00e5a0; --yellow: #ffd166; --purple: #a78bfa; --text: #f0f0ff; --soft: #9090b0; --muted: #505070; }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
 .sidebar { position: fixed; left:0; top:0; width: 220px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
 .sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
 .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; color: var(--accent); }
 .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
-.sidebar-nav { padding: 16px 0; flex: 1; }
+.sidebar-nav { padding: 16px 0; flex: 1; overflow-y: auto; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--soft); font-size: 13px; font-weight: 600; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; }
 .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
 .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(252,76,2,0.06); }
 .nav-icon { font-size: 16px; width: 20px; text-align: center; }
 .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
-.main { margin-left: 220px; flex: 1; padding: 32px 28px; display: flex; align-items: center; justify-content: center; }
-.coming-soon { text-align: center; }
-.coming-icon { font-size: 64px; margin-bottom: 20px; }
-.coming-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; margin-bottom: 10px; }
-.coming-title span { color: var(--accent); }
-.coming-sub { font-size: 14px; color: var(--muted); max-width: 300px; line-height: 1.7; }
-@media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } }
+.athlete-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff7b3a); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; overflow: hidden; }
+.athlete-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.main { margin-left: 220px; flex: 1; padding: 32px 28px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; }
+.page-title span { color: var(--accent); }
+.section-tag { font-family: 'Syne Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.tabs { display: flex; gap: 0; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 20px; width: fit-content; }
+.tab { padding: 8px 18px; border-radius: 7px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; color: var(--muted); transition: all 0.2s; border: none; background: none; }
+.tab.active { background: var(--accent); color: white; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+.panel-body { padding: 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1.2fr; gap: 14px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #ff6a1f; transform: translateY(-1px); }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--soft); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-danger { background: rgba(230,57,70,0.15); color: #e63946; border: 1px solid rgba(230,57,70,0.3); }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; color: var(--soft); letter-spacing: 0.5px; margin-bottom: 6px; display: block; font-weight: 600; text-transform: uppercase; }
+.form-input, .form-select, .form-textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Mulish', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 70px; }
+#heatmap, #routeMap, #compareMap { height: 380px; width: 100%; border-radius: 0; }
+#drawMap { height: 340px; width: 100%; }
+.route-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; position: relative; }
+.route-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.route-card.active { border-color: var(--accent); background: rgba(252,76,2,0.04); }
+.route-card.favourite::after { content: '⭐'; position: absolute; top: 12px; right: 12px; font-size: 14px; }
+.route-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.route-meta { font-size: 11px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.route-meta span { display: flex; align-items: center; gap: 3px; }
+.difficulty-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 6px; }
+.diff-easy { background: rgba(0,229,160,0.15); color: var(--green); }
+.diff-moderate { background: rgba(255,209,102,0.15); color: var(--yellow); }
+.diff-hard { background: rgba(252,76,2,0.15); color: var(--accent); }
+.diff-extreme { background: rgba(230,57,70,0.15); color: #e63946; }
+.custom-route-card { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--purple); border-radius: 10px; padding: 14px; margin-bottom: 8px; }
+.badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.badge-green { background: rgba(0,229,160,0.15); color: var(--green); }
+.badge-orange { background: rgba(252,76,2,0.15); color: var(--accent); }
+.badge-purple { background: rgba(167,139,250,0.15); color: var(--purple); }
+.loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--muted); font-size: 13px; gap: 10px; }
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.stat-mini { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; flex: 1; min-width: 80px; }
+.stat-mini-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; color: var(--accent); }
+.stat-mini-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; display: none; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 440px; margin: 20px; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 20px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.leaflet-container { background: #0a0a14; }
+.leaflet-tile { filter: brightness(0.65) saturate(0.5) hue-rotate(200deg); }
+@media (max-width: 900px) { .sidebar{display:none;} .main{margin-left:0;padding:20px 16px;} .two-col{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
@@ -45,16 +102,589 @@ body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--te
     <a href="/journal" class="nav-item"><span class="nav-icon">📓</span> Run Journal</a>
   </nav>
   <div class="sidebar-footer">
-    <a href="/api/logout" style="font-size:11px;color:var(--muted);text-decoration:none;">↩ Logout</a>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="athlete-avatar" id="avatarEl">A</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;" id="athleteName">Abhinav</div>
+        <div style="font-size:10px;color:var(--muted);">Runner</div>
+      </div>
+    </div>
+    <a href="/api/logout" style="display:block;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:none;">↩ Logout</a>
   </div>
 </aside>
+
 <main class="main">
-  <div class="coming-soon">
-    <div class="coming-icon">🗺️</div>
-    <div class="coming-title">Routes <span>Coming Soon</span></div>
-    <div class="coming-sub">Route library with heatmap and difficulty ratings — being built in Module 5!</div>
-    <a href="/dashboard" style="display:inline-block;margin-top:24px;padding:12px 24px;background:var(--accent);color:white;text-decoration:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;">← Back to Dashboard</a>
+  <div class="topbar">
+    <div>
+      <div class="section-tag">Exploration</div>
+      <div class="page-title">Your <span>Routes</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="openCustomModal()">+ Add Custom Route</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('library')">📚 Library</button>
+    <button class="tab" onclick="switchTab('heatmap')">🔥 Heatmap</button>
+    <button class="tab" onclick="switchTab('compare')">⚖️ Compare</button>
+    <button class="tab" onclick="switchTab('custom')">✏️ Custom</button>
+  </div>
+
+  <!-- LIBRARY TAB -->
+  <div class="tab-content active" id="tab-library">
+    <div class="two-col">
+      <div>
+        <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+          <input type="text" class="form-input" id="routeSearch" placeholder="Search routes..." oninput="filterRoutes()" style="flex:1;">
+          <select class="form-select" id="routeSort" onchange="filterRoutes()" style="width:auto;">
+            <option value="recent">Most Recent</option>
+            <option value="distance">Longest</option>
+            <option value="runs">Most Run</option>
+            <option value="pace">Fastest</option>
+          </select>
+        </div>
+        <div id="routesList"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+      <div>
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="panel-header">
+            <div class="panel-title" id="selectedRouteName">Select a Route</div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline btn-sm" id="favBtn" onclick="toggleFavourite()" style="display:none;">⭐ Favourite</button>
+              <a id="stravaLink" href="#" target="_blank" class="btn btn-outline btn-sm" style="display:none;">View on Strava →</a>
+            </div>
+          </div>
+          <div id="routeMap" style="height:280px;"></div>
+          <div class="panel-body" id="routeDetails" style="padding:14px 20px;">
+            <div style="color:var(--muted);font-size:13px;">Click a route to see details</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEATMAP TAB -->
+  <div class="tab-content" id="tab-heatmap">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Running Heatmap</div>
+        <span class="badge badge-orange" id="heatmapCount">Loading...</span>
+      </div>
+      <div id="heatmap"></div>
+      <div class="panel-body">
+        <div class="stat-row" id="heatmapStats"></div>
+        <div style="font-size:12px;color:var(--muted);">Brighter lines = more runs on that route. Shows your last 30 activities.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARE TAB -->
+  <div class="tab-content" id="tab-compare">
+    <div class="panel" style="margin-bottom:14px;">
+      <div class="panel-header"><div class="panel-title">Compare Two Routes</div></div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div>
+            <label class="form-label">Route A</label>
+            <select class="form-select" id="compareA" onchange="updateCompare()">
+              <option value="">Select route...</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Route B</label>
+            <select class="form-select" id="compareB" onchange="updateCompare()">
+              <option value="">Select route...</option>
+            </select>
+          </div>
+        </div>
+        <div id="compareMap" style="height:300px;margin-bottom:14px;border-radius:8px;overflow:hidden;"></div>
+        <div id="compareStats" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM TAB -->
+  <div class="tab-content" id="tab-custom">
+    <div class="two-col">
+      <div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Saved Custom Routes</div></div>
+          <div id="customRoutesList" style="padding:12px;"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Add Custom Route</div>
+          </div>
+          <div class="panel-body">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Fill in the details of your custom route below.</div>
+            <div class="form-group">
+              <label class="form-label">Route Name</label>
+              <input type="text" class="form-input" id="customName" placeholder="e.g. Morning Loop, Park Circuit">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Distance (km)</label>
+              <input type="number" class="form-input" id="customDist" placeholder="e.g. 5.2" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Elevation Gain (m)</label>
+              <input type="number" class="form-input" id="customElev" placeholder="e.g. 45">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <input type="text" class="form-input" id="customLocation" placeholder="e.g. Koramangala, Bengaluru">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Surface Type</label>
+              <select class="form-select" id="customSurface">
+                <option value="road">Road</option>
+                <option value="trail">Trail</option>
+                <option value="track">Track</option>
+                <option value="mixed">Mixed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes</label>
+              <textarea class="form-textarea" id="customNotes" placeholder="Any notes about this route..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveCustomRoute()" style="width:100%;">💾 Save Route</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
+
+<!-- CUSTOM ROUTE MODAL -->
+<div class="modal-overlay" id="customModal" onclick="closeCustomModal(event)">
+  <div class="modal">
+    <div class="modal-title">✏️ Add Custom Route</div>
+    <div class="form-group">
+      <label class="form-label">Route Name</label>
+      <input type="text" class="form-input" id="modalName" placeholder="e.g. Morning Loop">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Distance (km)</label>
+      <input type="number" class="form-input" id="modalDist" placeholder="5.2" step="0.1">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Elevation Gain (m)</label>
+      <input type="number" class="form-input" id="modalElev" placeholder="45">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Location</label>
+      <input type="text" class="form-input" id="modalLocation" placeholder="Koramangala, Bengaluru">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Surface</label>
+      <select class="form-select" id="modalSurface">
+        <option value="road">Road</option>
+        <option value="trail">Trail</option>
+        <option value="track">Track</option>
+        <option value="mixed">Mixed</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="modalNotes" placeholder="Landmarks, hazards, highlights..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveModalRoute()" style="flex:1;">Save Route</button>
+      <button class="btn btn-outline" onclick="document.getElementById('customModal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MAPTILER_KEY = 'bCtHHQu0V5T0XCCVBhEF';
+let allActivities = [];
+let routeMap = null;
+let heatmapInstance = null;
+let compareMapInstance = null;
+let selectedActivity = null;
+let favourites = JSON.parse(localStorage.getItem('runlog_favourites') || '[]');
+
+// ===== UTILS =====
+function decodePolyline(encoded) {
+  if (!encoded) return [];
+  let index = 0, lat = 0, lng = 0;
+  const coords = [];
+  while (index < encoded.length) {
+    let shift = 0, result = 0, byte;
+    do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+    shift = 0; result = 0;
+    do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+    coords.push([lat/1e5, lng/1e5]);
+  }
+  return coords;
+}
+
+function formatPace(mps) {
+  if (!mps) return '—';
+  const mpk = 1000/(mps*60);
+  const m = Math.floor(mpk), s = Math.round((mpk-m)*60);
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function formatDist(m) { return (m/1000).toFixed(2); }
+
+function formatDate(d) {
+  return new Date(d.replace('Z','+05:30')).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function getDifficulty(elevGain, dist) {
+  const ratio = elevGain / (dist/1000);
+  if (ratio < 5) return { label: 'Easy', class: 'diff-easy' };
+  if (ratio < 15) return { label: 'Moderate', class: 'diff-moderate' };
+  if (ratio < 30) return { label: 'Hard', class: 'diff-hard' };
+  return { label: 'Extreme', class: 'diff-extreme' };
+}
+
+// ===== TABS =====
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['library','heatmap','compare','custom'][i] === name));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'heatmap') setTimeout(initHeatmap, 100);
+  if (name === 'compare') setTimeout(initCompare, 100);
+  if (name === 'custom') renderCustomRoutes();
+}
+
+// ===== ROUTE LIBRARY =====
+function filterRoutes() {
+  const search = document.getElementById('routeSearch').value.toLowerCase();
+  const sort = document.getElementById('routeSort').value;
+  let routes = [...allActivities].filter(a => a.map?.summary_polyline);
+  if (search) routes = routes.filter(a => a.name.toLowerCase().includes(search));
+  if (sort === 'distance') routes.sort((a,b) => b.distance - a.distance);
+  else if (sort === 'pace') routes.sort((a,b) => b.average_speed - a.average_speed);
+  else if (sort === 'runs') routes.sort((a,b) => b.achievement_count - a.achievement_count);
+  renderRouteCards(routes);
+}
+
+function renderRouteCards(routes) {
+  if (!routes.length) {
+    document.getElementById('routesList').innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;">No routes found</div>';
+    return;
+  }
+  const isFav = id => favourites.includes(id);
+  document.getElementById('routesList').innerHTML = routes.slice(0, 20).map(a => {
+    const diff = getDifficulty(a.total_elevation_gain, a.distance);
+    return `<div class="route-card ${isFav(a.id)?'favourite':''}" onclick="selectRoute(${a.id})">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div class="route-name">${a.name}</div>
+        <span class="difficulty-badge ${diff.class}">${diff.label}</span>
+      </div>
+      <div class="route-meta">
+        <span>📏 ${formatDist(a.distance)} km</span>
+        <span>⚡ ${formatPace(a.average_speed)}/km</span>
+        <span>⛰️ ↑${Math.round(a.total_elevation_gain)}m</span>
+        <span>📅 ${formatDate(a.start_date_local)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectRoute(id) {
+  selectedActivity = allActivities.find(a => a.id === id);
+  if (!selectedActivity) return;
+
+  document.querySelectorAll('.route-card').forEach(c => c.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  document.getElementById('selectedRouteName').textContent = selectedActivity.name;
+  document.getElementById('favBtn').style.display = 'inline-flex';
+  document.getElementById('favBtn').textContent = favourites.includes(id) ? '⭐ Unfavourite' : '☆ Favourite';
+
+  const stravaLink = document.getElementById('stravaLink');
+  stravaLink.href = `https://www.strava.com/activities/${id}`;
+  stravaLink.style.display = 'inline-flex';
+
+  // Map
+  if (!routeMap) {
+    routeMap = L.map('routeMap', { zoomControl: true, attributionControl: false });
+    L.tileLayer(`https://api.maptiler.com/maps/dataviz-dark/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, { maxZoom: 18 }).addTo(routeMap);
+  } else {
+    routeMap.eachLayer(l => { if (l instanceof L.Polyline || l instanceof L.Marker) routeMap.removeLayer(l); });
+  }
+
+  const coords = decodePolyline(selectedActivity.map.summary_polyline);
+  if (coords.length) {
+    const poly = L.polyline(coords, { color: '#FC4C02', weight: 4, opacity: 0.9 }).addTo(routeMap);
+    const gi = L.divIcon({ html: '<div style="background:#00e5a0;width:12px;height:12px;border-radius:50%;border:2px solid white;"></div>', iconSize:[12,12], iconAnchor:[6,6] });
+    const ri = L.divIcon({ html: '<div style="background:#FC4C02;width:12px;height:12px;border-radius:50%;border:2px solid white;"></div>', iconSize:[12,12], iconAnchor:[6,6] });
+    L.marker(coords[0], {icon:gi}).addTo(routeMap);
+    L.marker(coords[coords.length-1], {icon:ri}).addTo(routeMap);
+    routeMap.fitBounds(poly.getBounds(), {padding:[20,20]});
+  }
+
+  const diff = getDifficulty(selectedActivity.total_elevation_gain, selectedActivity.distance);
+  document.getElementById('routeDetails').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div style="text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--accent);">${formatDist(selectedActivity.distance)}</div>
+        <div style="font-size:10px;color:var(--muted);">km</div>
+      </div>
+      <div style="text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;">${formatPace(selectedActivity.average_speed)}</div>
+        <div style="font-size:10px;color:var(--muted);">/km pace</div>
+      </div>
+      <div style="text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--yellow);">↑${Math.round(selectedActivity.total_elevation_gain)}m</div>
+        <div style="font-size:10px;color:var(--muted);">elevation</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--soft);">
+      <span class="difficulty-badge ${diff.class}" style="margin-right:8px;">${diff.label}</span>
+      ${formatDate(selectedActivity.start_date_local)} · ${selectedActivity.location_city || 'Bengaluru'}
+    </div>
+  `;
+}
+
+function toggleFavourite() {
+  if (!selectedActivity) return;
+  const id = selectedActivity.id;
+  if (favourites.includes(id)) {
+    favourites = favourites.filter(f => f !== id);
+    document.getElementById('favBtn').textContent = '☆ Favourite';
+  } else {
+    favourites.push(id);
+    document.getElementById('favBtn').textContent = '⭐ Unfavourite';
+  }
+  localStorage.setItem('runlog_favourites', JSON.stringify(favourites));
+  filterRoutes();
+}
+
+// ===== HEATMAP =====
+function initHeatmap() {
+  if (heatmapInstance) { heatmapInstance.invalidateSize(); return; }
+  heatmapInstance = L.map('heatmap', { zoomControl: true, attributionControl: false });
+  L.tileLayer(`https://api.maptiler.com/maps/dataviz-dark/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, { maxZoom: 18 }).addTo(heatmapInstance);
+
+  const withRoutes = allActivities.filter(a => a.map?.summary_polyline);
+  document.getElementById('heatmapCount').textContent = `${withRoutes.length} routes`;
+
+  const allCoords = [];
+  withRoutes.forEach((a, i) => {
+    const coords = decodePolyline(a.map.summary_polyline);
+    if (!coords.length) return;
+    const opacity = 0.3 + (i / withRoutes.length) * 0.4;
+    L.polyline(coords, { color: '#FC4C02', weight: 2, opacity }).addTo(heatmapInstance);
+    allCoords.push(...coords);
+  });
+
+  if (allCoords.length) {
+    heatmapInstance.fitBounds(L.latLngBounds(allCoords), { padding: [20,20] });
+  }
+
+  const totalKm = allActivities.reduce((s,a) => s+a.distance/1000, 0);
+  const totalElev = allActivities.reduce((s,a) => s+a.total_elevation_gain, 0);
+  document.getElementById('heatmapStats').innerHTML = `
+    <div class="stat-mini"><div class="stat-mini-val">${withRoutes.length}</div><div class="stat-mini-label">Routes Mapped</div></div>
+    <div class="stat-mini"><div class="stat-mini-val">${totalKm.toFixed(0)}</div><div class="stat-mini-label">Total KM</div></div>
+    <div class="stat-mini"><div class="stat-mini-val">${Math.round(totalElev)}</div><div class="stat-mini-label">Total Elevation (m)</div></div>
+    <div class="stat-mini"><div class="stat-mini-val">${(totalKm/allActivities.length).toFixed(1)}</div><div class="stat-mini-label">Avg Distance (km)</div></div>
+  `;
+}
+
+// ===== COMPARE =====
+function initCompare() {
+  if (!compareMapInstance) {
+    compareMapInstance = L.map('compareMap', { zoomControl: true, attributionControl: false });
+    L.tileLayer(`https://api.maptiler.com/maps/dataviz-dark/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, { maxZoom: 18 }).addTo(compareMapInstance);
+  } else {
+    compareMapInstance.invalidateSize();
+  }
+
+  const withRoutes = allActivities.filter(a => a.map?.summary_polyline);
+  const options = withRoutes.map(a => `<option value="${a.id}">${a.name} (${formatDist(a.distance)}km)</option>`).join('');
+  document.getElementById('compareA').innerHTML = '<option value="">Select route A...</option>' + options;
+  document.getElementById('compareB').innerHTML = '<option value="">Select route B...</option>' + options;
+}
+
+function updateCompare() {
+  const idA = parseInt(document.getElementById('compareA').value);
+  const idB = parseInt(document.getElementById('compareB').value);
+  if (!idA || !idB) return;
+
+  const a = allActivities.find(x => x.id === idA);
+  const b = allActivities.find(x => x.id === idB);
+  if (!a || !b) return;
+
+  compareMapInstance.eachLayer(l => { if (l instanceof L.Polyline) compareMapInstance.removeLayer(l); });
+
+  const coordsA = decodePolyline(a.map.summary_polyline);
+  const coordsB = decodePolyline(b.map.summary_polyline);
+  const allCoords = [];
+
+  if (coordsA.length) { L.polyline(coordsA, { color: '#FC4C02', weight: 3, opacity: 0.9 }).addTo(compareMapInstance); allCoords.push(...coordsA); }
+  if (coordsB.length) { L.polyline(coordsB, { color: '#3a7bff', weight: 3, opacity: 0.9 }).addTo(compareMapInstance); allCoords.push(...coordsB); }
+  if (allCoords.length) compareMapInstance.fitBounds(L.latLngBounds(allCoords), { padding: [20,20] });
+
+  const diffA = getDifficulty(a.total_elevation_gain, a.distance);
+  const diffB = getDifficulty(b.total_elevation_gain, b.distance);
+
+  document.getElementById('compareStats').innerHTML = `
+    <div style="background:rgba(252,76,2,0.06);border:1px solid rgba(252,76,2,0.3);border-radius:10px;padding:16px;">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--accent);margin-bottom:10px;">🟠 ${a.name}</div>
+      <div style="font-size:12px;color:var(--soft);line-height:2;">
+        Distance: <strong>${formatDist(a.distance)} km</strong><br>
+        Pace: <strong>${formatPace(a.average_speed)}/km</strong><br>
+        Elevation: <strong>↑${Math.round(a.total_elevation_gain)}m</strong><br>
+        Difficulty: <span class="difficulty-badge ${diffA.class}">${diffA.label}</span>
+      </div>
+    </div>
+    <div style="background:rgba(58,123,255,0.06);border:1px solid rgba(58,123,255,0.3);border-radius:10px;padding:16px;">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--blue);margin-bottom:10px;">🔵 ${b.name}</div>
+      <div style="font-size:12px;color:var(--soft);line-height:2;">
+        Distance: <strong>${formatDist(b.distance)} km</strong><br>
+        Pace: <strong>${formatPace(b.average_speed)}/km</strong><br>
+        Elevation: <strong>↑${Math.round(b.total_elevation_gain)}m</strong><br>
+        Difficulty: <span class="difficulty-badge ${diffB.class}">${diffB.label}</span>
+      </div>
+    </div>
+  `;
+}
+
+// ===== CUSTOM ROUTES =====
+function getCustomRoutes() {
+  try { return JSON.parse(localStorage.getItem('runlog_custom_routes') || '[]'); } catch { return []; }
+}
+function saveCustomRoutes(routes) { localStorage.setItem('runlog_custom_routes', JSON.stringify(routes)); }
+
+function openCustomModal() {
+  document.getElementById('customModal').classList.add('open');
+}
+function closeCustomModal(e) {
+  if (e.target === document.getElementById('customModal')) document.getElementById('customModal').classList.remove('open');
+}
+
+function saveModalRoute() {
+  const name = document.getElementById('modalName').value.trim();
+  if (!name) { alert('Please enter a route name!'); return; }
+  const routes = getCustomRoutes();
+  routes.unshift({
+    id: Date.now(),
+    name,
+    dist: parseFloat(document.getElementById('modalDist').value) || 0,
+    elev: parseFloat(document.getElementById('modalElev').value) || 0,
+    location: document.getElementById('modalLocation').value.trim(),
+    surface: document.getElementById('modalSurface').value,
+    notes: document.getElementById('modalNotes').value.trim(),
+    date: new Date().toISOString(),
+    favourite: false
+  });
+  saveCustomRoutes(routes);
+  document.getElementById('customModal').classList.remove('open');
+  document.getElementById('modalName').value = '';
+  document.getElementById('modalDist').value = '';
+  document.getElementById('modalElev').value = '';
+  document.getElementById('modalLocation').value = '';
+  document.getElementById('modalNotes').value = '';
+  renderCustomRoutes();
+  switchTab('custom');
+}
+
+function saveCustomRoute() {
+  const name = document.getElementById('customName').value.trim();
+  if (!name) { alert('Please enter a route name!'); return; }
+  const routes = getCustomRoutes();
+  routes.unshift({
+    id: Date.now(),
+    name,
+    dist: parseFloat(document.getElementById('customDist').value) || 0,
+    elev: parseFloat(document.getElementById('customElev').value) || 0,
+    location: document.getElementById('customLocation').value.trim(),
+    surface: document.getElementById('customSurface').value,
+    notes: document.getElementById('customNotes').value.trim(),
+    date: new Date().toISOString(),
+    favourite: false
+  });
+  saveCustomRoutes(routes);
+  document.getElementById('customName').value = '';
+  document.getElementById('customDist').value = '';
+  document.getElementById('customElev').value = '';
+  document.getElementById('customLocation').value = '';
+  document.getElementById('customNotes').value = '';
+  renderCustomRoutes();
+}
+
+function deleteCustomRoute(id) {
+  if (!confirm('Delete this route?')) return;
+  saveCustomRoutes(getCustomRoutes().filter(r => r.id !== id));
+  renderCustomRoutes();
+}
+
+function toggleCustomFav(id) {
+  const routes = getCustomRoutes().map(r => r.id === id ? {...r, favourite: !r.favourite} : r);
+  saveCustomRoutes(routes);
+  renderCustomRoutes();
+}
+
+function renderCustomRoutes() {
+  const routes = getCustomRoutes();
+  const container = document.getElementById('customRoutesList');
+  if (!routes.length) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">No custom routes yet. Add your first one!</div>';
+    return;
+  }
+  container.innerHTML = routes.map(r => {
+    const diff = getDifficulty(r.elev, r.dist * 1000);
+    return `<div class="custom-route-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;">${r.favourite?'⭐ ':''}${r.name}</div>
+          <div style="font-size:11px;color:var(--muted);">${r.location || 'No location'} · ${r.surface}</div>
+        </div>
+        <span class="difficulty-badge ${diff.class}">${diff.label}</span>
+      </div>
+      <div style="display:flex;gap:12px;font-size:11px;color:var(--soft);margin-bottom:10px;">
+        ${r.dist ? `<span>📏 ${r.dist} km</span>` : ''}
+        ${r.elev ? `<span>⛰️ ↑${r.elev}m</span>` : ''}
+        <span>📅 ${new Date(r.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>
+      </div>
+      ${r.notes ? `<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${r.notes}</div>` : ''}
+      <div style="display:flex;gap:6px;">
+        <button onclick="toggleCustomFav(${r.id})" class="btn btn-outline btn-sm">${r.favourite?'Unfavourite':'⭐ Favourite'}</button>
+        <button onclick="deleteCustomRoute(${r.id})" class="btn btn-danger btn-sm">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== LOAD DATA =====
+async function loadData() {
+  try {
+    const res = await fetch('/api/activities?per_page=30');
+    if (!res.ok) { window.location.href='/'; return; }
+    allActivities = await res.json();
+
+    const withRoutes = allActivities.filter(a => a.map?.summary_polyline);
+    filterRoutes();
+
+    // Populate compare dropdowns
+    const options = withRoutes.map(a => `<option value="${a.id}">${a.name} (${formatDist(a.distance)}km)</option>`).join('');
+    document.getElementById('compareA').innerHTML = '<option value="">Select route A...</option>' + options;
+    document.getElementById('compareB').innerHTML = '<option value="">Select route B...</option>' + options;
+
+  } catch(e) { window.location.href='/'; }
+}
+
+async function loadAthlete() {
+  try {
+    const res = await fetch('/api/athlete');
+    if (!res.ok) return;
+    const athlete = await res.json();
+    document.getElementById('athleteName').textContent = athlete.firstname+' '+athlete.lastname;
+    if (athlete.profile_medium) document.getElementById('avatarEl').innerHTML=`<img src="${athlete.profile_medium}">`;
+  } catch(e) {}
+}
+
+loadData();
+loadAthlete();
+</script>
 </body>
 </html>
