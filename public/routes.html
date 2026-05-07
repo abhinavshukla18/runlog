@@ -203,58 +203,46 @@ body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--te
     </div>
   </div>
 
-  <!-- CUSTOM TAB -->
-  <div class="tab-content" id="tab-custom">
-    <div class="two-col">
-      <div>
-        <div class="panel">
-          <div class="panel-header"><div class="panel-title">Saved Custom Routes</div></div>
-          <div id="customRoutesList" style="padding:12px;"></div>
+ <!-- CUSTOM TAB -->
+<div class="tab-content" id="tab-custom">
+  <div class="two-col">
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🗺️ Draw a Route</div>
+          <span class="badge badge-green">Road Snapping ON</span>
         </div>
-      </div>
-      <div>
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">Add Custom Route</div>
+        <div class="panel-body" style="padding:12px;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Click on the map to add waypoints. Routes will snap to roads automatically.</div>
+          <div id="drawMap" style="height:340px;border-radius:8px;overflow:hidden;margin-bottom:12px;"></div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" onclick="undoWaypoint()">↩ Undo</button>
+            <button class="btn btn-outline btn-sm" onclick="clearRoute()">🗑️ Clear</button>
+            <div style="flex:1;text-align:right;font-family:'Syne Mono',monospace;font-size:12px;color:var(--accent);" id="drawDistance">0.00 km</div>
           </div>
-          <div class="panel-body">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Fill in the details of your custom route below.</div>
-            <div class="form-group">
-              <label class="form-label">Route Name</label>
-              <input type="text" class="form-input" id="customName" placeholder="e.g. Morning Loop, Park Circuit">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Distance (km)</label>
-              <input type="number" class="form-input" id="customDist" placeholder="e.g. 5.2" step="0.1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Elevation Gain (m)</label>
-              <input type="number" class="form-input" id="customElev" placeholder="e.g. 45">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Location</label>
-              <input type="text" class="form-input" id="customLocation" placeholder="e.g. Koramangala, Bengaluru">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Surface Type</label>
-              <select class="form-select" id="customSurface">
-                <option value="road">Road</option>
-                <option value="trail">Trail</option>
-                <option value="track">Track</option>
-                <option value="mixed">Mixed</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Notes</label>
-              <textarea class="form-textarea" id="customNotes" placeholder="Any notes about this route..."></textarea>
-            </div>
-            <button class="btn btn-primary" onclick="saveCustomRoute()" style="width:100%;">💾 Save Route</button>
+          <div class="form-group">
+            <label class="form-label">Route Name</label>
+            <input type="text" class="form-input" id="drawName" placeholder="e.g. Morning Loop">
           </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea class="form-textarea" id="drawNotes" placeholder="Any notes..." style="min-height:60px;"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveDrawnRoute()" style="width:100%;">💾 Save Route</button>
         </div>
       </div>
     </div>
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Saved Custom Routes</div>
+          <span id="customCount" style="font-size:11px;color:var(--muted);font-family:'Syne Mono',monospace;">0 routes</span>
+        </div>
+        <div id="customRoutesList" style="padding:12px;max-height:600px;overflow-y:auto;"></div>
+      </div>
+    </div>
   </div>
-</main>
+</div>
 
 <!-- CUSTOM ROUTE MODAL -->
 <div class="modal-overlay" id="customModal" onclick="closeCustomModal(event)">
@@ -350,7 +338,7 @@ function switchTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   if (name === 'heatmap') setTimeout(initHeatmap, 100);
   if (name === 'compare') setTimeout(initCompare, 100);
-  if (name === 'custom') renderCustomRoutes();
+  if (name === 'custom') { renderCustomRoutes(); setTimeout(initDrawMap, 100); 
 }
 
 // ===== ROUTE LIBRARY =====
@@ -681,6 +669,130 @@ async function loadAthlete() {
     document.getElementById('athleteName').textContent = athlete.firstname+' '+athlete.lastname;
     if (athlete.profile_medium) document.getElementById('avatarEl').innerHTML=`<img src="${athlete.profile_medium}">`;
   } catch(e) {}
+}
+
+// ===== ROUTE DRAWING =====
+const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgyNTcwYjM3MzA2NDQ4Njk4ZDk1MjA5YTRlZmMxYzE2IiwiaCI6Im11cm11cjY0In0=';
+let drawMap = null;
+let waypoints = [];
+let drawnLayers = [];
+let totalDrawDistance = 0;
+
+function initDrawMap() {
+  if (drawMap) return;
+  drawMap = L.map('drawMap', { zoomControl: true, attributionControl: false });
+  L.tileLayer(`https://api.maptiler.com/maps/dataviz-dark/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, { maxZoom: 18 }).addTo(drawMap);
+  
+  // Default to Bengaluru
+  drawMap.setView([12.9716, 77.5946], 13);
+
+  drawMap.on('click', async function(e) {
+    const { lat, lng } = e.latlng;
+    addWaypoint(lat, lng);
+  });
+}
+
+async function addWaypoint(lat, lng) {
+  waypoints.push([lng, lat]); // ORS uses lng,lat
+
+  // Add marker
+  const marker = L.circleMarker([lat, lng], {
+    radius: 6,
+    fillColor: waypoints.length === 1 ? '#00e5a0' : '#FC4C02',
+    color: 'white',
+    weight: 2,
+    fillOpacity: 1
+  }).addTo(drawMap);
+  drawnLayers.push(marker);
+
+  // If we have 2+ waypoints, get route
+  if (waypoints.length >= 2) {
+    try {
+      const response = await fetch('https://api.openrouteservice.org/v2/directions/foot-running/geojson', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': ORS_KEY
+        },
+        body: JSON.stringify({
+          coordinates: waypoints.slice(-2)
+        })
+      });
+      
+      if (!response.ok) throw new Error('Route failed');
+      
+      const data = await response.json();
+      const coords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
+      const dist = data.features[0].properties.segments[0].distance / 1000;
+      totalDrawDistance += dist;
+      
+      const line = L.polyline(coords, {
+        color: '#FC4C02',
+        weight: 4,
+        opacity: 0.9
+      }).addTo(drawMap);
+      drawnLayers.push(line);
+      
+      document.getElementById('drawDistance').textContent = totalDrawDistance.toFixed(2) + ' km';
+    } catch(e) {
+      // Fallback to straight line
+      const lastTwo = waypoints.slice(-2);
+      const line = L.polyline([
+        [lastTwo[0][1], lastTwo[0][0]],
+        [lastTwo[1][1], lastTwo[1][0]]
+      ], { color: '#FC4C02', weight: 4, opacity: 0.7, dashArray: '8,4' }).addTo(drawMap);
+      drawnLayers.push(line);
+    }
+  }
+}
+
+function undoWaypoint() {
+  if (!waypoints.length) return;
+  waypoints.pop();
+  // Remove last 2 layers (marker + line) or just marker if first point
+  const toRemove = waypoints.length >= 1 ? 2 : 1;
+  for (let i = 0; i < toRemove && drawnLayers.length; i++) {
+    const layer = drawnLayers.pop();
+    drawMap.removeLayer(layer);
+  }
+  // Recalculate distance roughly
+  if (waypoints.length < 2) totalDrawDistance = 0;
+  else totalDrawDistance = Math.max(0, totalDrawDistance - 0.5);
+  document.getElementById('drawDistance').textContent = totalDrawDistance.toFixed(2) + ' km';
+}
+
+function clearRoute() {
+  waypoints = [];
+  drawnLayers.forEach(l => drawMap.removeLayer(l));
+  drawnLayers = [];
+  totalDrawDistance = 0;
+  document.getElementById('drawDistance').textContent = '0.00 km';
+}
+
+function saveDrawnRoute() {
+  const name = document.getElementById('drawName').value.trim();
+  if (!name) { alert('Please enter a route name!'); return; }
+  if (waypoints.length < 2) { alert('Please draw a route first by clicking on the map!'); return; }
+
+  const routes = getCustomRoutes();
+  routes.unshift({
+    id: Date.now(),
+    name,
+    dist: parseFloat(totalDrawDistance.toFixed(2)),
+    elev: 0,
+    location: 'Custom drawn route',
+    surface: 'road',
+    notes: document.getElementById('drawNotes').value.trim(),
+    date: new Date().toISOString(),
+    favourite: false,
+    waypoints: waypoints
+  });
+  saveCustomRoutes(routes);
+  clearRoute();
+  document.getElementById('drawName').value = '';
+  document.getElementById('drawNotes').value = '';
+  renderCustomRoutes();
+  alert('Route saved! ✅');
 }
 
 loadData();
