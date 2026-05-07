@@ -189,16 +189,42 @@ async function generatePlan() {
 
   const goalLabel = {
     '5k':'5K','10k':'10K','half':'Half Marathon','full':'Full Marathon',
-    'ultra50':'50K Ultra','ultra60':'60K Ultra Birthday Run','ultra100':'100K Ultra',
+    'ultra50':'50K Ultra','ultra60':'60K Ultra Birthday Run 🎂','ultra100':'100K Ultra',
     'custom': document.getElementById('customDist').value + 'K Custom Run'
   }[goalType];
 
+  const goalDist = {'5k':5,'10k':10,'half':21.1,'full':42.2,'ultra50':50,'ultra60':60,'ultra100':100,'custom':parseFloat(document.getElementById('customDist').value)||30}[goalType];
   const daysUntil = Math.ceil((new Date(targetDate) - new Date()) / (1000*60*60*24));
-  const longestRun = document.getElementById('longestRun').value;
+  const longestRun = parseFloat(document.getElementById('longestRun').value) || 21;
   const runsPerWeek = document.getElementById('runsPerWeek').value;
-  const fiveK = document.getElementById('fiveK').value;
+  const fiveK = document.getElementById('fiveK').value || '26:56';
   const runWalk = document.getElementById('runWalk').value;
   const notes = document.getElementById('notes').value;
+
+  // Parse 5K time
+  const [fiveKMins, fiveKSecs] = fiveK.split(':').map(Number);
+  const fiveKTotalMins = fiveKMins + (fiveKSecs||0)/60;
+  const fiveKPace = fiveKTotalMins / 5;
+
+  // Riegel predictions
+  function riegelPace(dist) {
+    const time = (fiveKTotalMins * 60) * Math.pow(dist / 5, 1.06);
+    const pace = time / dist / 60;
+    const pm = Math.floor(pace);
+    const ps = Math.round((pace-pm)*60);
+    return `${pm}:${String(ps).padStart(2,'0')}`;
+  }
+
+  function riegelTime(dist) {
+    const secs = (fiveKTotalMins * 60) * Math.pow(dist / 5, 1.06);
+    const h = Math.floor(secs/3600);
+    const m = Math.floor((secs%3600)/60);
+    const s = Math.round(secs%60);
+    return h > 0 ? `${h}h ${m}m` : `${m}m ${s}s`;
+  }
+
+  const easyPace = (fiveKPace * 1.4).toFixed(0);
+  const easyPaceStr = `${Math.floor(easyPace/60)||Math.floor(fiveKPace*1.4)}:${String(Math.round((fiveKPace*1.4%1)*60)).padStart(2,'0')}`;
 
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
@@ -212,63 +238,121 @@ async function generatePlan() {
   aiContent.style.display = 'none';
   aiResponse.scrollIntoView({ behavior: 'smooth' });
 
-  const prompt = `You are an expert running coach. Create a detailed personalized plan for Abhinav, a 19-year-old engineering student in India (Bengaluru).
+  await new Promise(r => setTimeout(r, 1200));
 
-GOAL: ${goalLabel}
-TARGET DATE: ${targetDate} (${daysUntil} days away)
-LONGEST RUN: ${longestRun} km
-RUNS/WEEK: ${runsPerWeek}
-5K BEST: ${fiveK}
-RUN-WALK: ${runWalk === 'yes' ? 'Yes' : 'No'}
-NOTES: ${notes || 'None'}
-KNOWN PRs: 5K: 26:56, 10K: 55:41, HM: 2:01:59
+  // Generate plan
+  const isUltra = goalDist >= 42;
+  const isBeyondLongest = goalDist > longestRun * 1.5;
+  const feasibility = daysUntil < 14 && isBeyondLongest ? '⚠️ Aggressive' : daysUntil < 30 ? '✅ Challenging but doable' : '✅ Very achievable';
 
-Create a complete plan with these sections using ### headers:
+  // Pace phases
+  const phases = goalDist <= 10 ? [
+    { phase: 'Warm Up', km: `0 – ${Math.round(goalDist*0.2)}`, pace: riegelPace(goalDist * 1.3), feel: 'Very Easy' },
+    { phase: 'Main Effort', km: `${Math.round(goalDist*0.2)} – ${Math.round(goalDist*0.8)}`, pace: riegelPace(goalDist), feel: 'Comfortably Hard' },
+    { phase: 'Finish Strong', km: `${Math.round(goalDist*0.8)} – ${goalDist}`, pace: riegelPace(goalDist * 0.9), feel: '🔥 Push' },
+  ] : goalDist <= 21.1 ? [
+    { phase: 'Easy Start', km: `0 – ${Math.round(goalDist*0.25)}`, pace: riegelPace(goalDist * 1.2), feel: 'Very Easy' },
+    { phase: 'Finding Rhythm', km: `${Math.round(goalDist*0.25)} – ${Math.round(goalDist*0.6)}`, pace: riegelPace(goalDist * 1.05), feel: 'Comfortable' },
+    { phase: 'Race Pace', km: `${Math.round(goalDist*0.6)} – ${Math.round(goalDist*0.85)}`, pace: riegelPace(goalDist), feel: 'Hard' },
+    { phase: 'Finish', km: `${Math.round(goalDist*0.85)} – ${goalDist}`, pace: riegelPace(goalDist * 0.95), feel: '🔥 Everything' },
+  ] : [
+    { phase: 'Conservative Start', km: `0 – ${Math.round(goalDist*0.2)}`, pace: riegelPace(goalDist * 1.3), feel: 'Embarrassingly Easy' },
+    { phase: 'Settle In', km: `${Math.round(goalDist*0.2)} – ${Math.round(goalDist*0.4)}`, pace: riegelPace(goalDist * 1.15), feel: 'Easy' },
+    { phase: 'Middle Miles', km: `${Math.round(goalDist*0.4)} – ${Math.round(goalDist*0.65)}`, pace: riegelPace(goalDist * 1.1), feel: 'Moderate' },
+    { phase: 'Survival Mode', km: `${Math.round(goalDist*0.65)} – ${Math.round(goalDist*0.85)}`, pace: riegelPace(goalDist * 1.2), feel: '😤 Grind' },
+    { phase: 'Finish', km: `${Math.round(goalDist*0.85)} – ${goalDist}`, pace: 'Walk/Jog', feel: 'Survive & Smile' },
+  ];
 
-### 🎯 Goal Assessment
-Is this realistic? How challenging?
-
-### ⚡ Pace Strategy
-Target paces by phase. Include run/walk intervals if applicable. Use a table: Phase | KM Range | Target Pace | Feel
-
-### 📅 Training Plan
-Alternate-day schedule for ${daysUntil} days. Table: Day | Date | Session | Distance | Notes. Keep it realistic for a college student.
-
-### 🎒 Race Day Bag
-Budget-friendly Indian options (dates, bananas, nimbu pani, chikki). List format.
-
-### 🍌 Nutrition Guide
-Night before, race morning timing, during-run fueling table: KM | Food | Hydration
-
-### 🧠 Mental Strategy
-3-4 key mental tips specific to this distance.
-
-### ⚠️ Top Warnings
-3 things that can go wrong and how to prevent them.
-
-Be specific, energetic, and use Indian food options. Keep it motivating.`;
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await response.json();
-    const text = data.content?.[0]?.text || 'Something went wrong. Please try again.';
-    thinking.style.display = 'none';
-    aiContent.style.display = 'block';
-    aiContent.innerHTML = markdownToHTML(text);
-  } catch(err) {
-    thinking.style.display = 'none';
-    aiContent.style.display = 'block';
-    aiContent.innerHTML = '<p style="color:var(--accent);">Error generating plan. Please try again.</p>';
+  // Training plan
+  const weeksAvail = Math.floor(daysUntil / 7);
+  const trainingRows = [];
+  for (let w = 1; w <= Math.min(weeksAvail, 6); w++) {
+    const isLastWeek = w === Math.min(weeksAvail, 6);
+    const isTaperWeek = w === Math.min(weeksAvail, 6) - 1;
+    if (isLastWeek) {
+      trainingRows.push({ day: `Week ${w}`, session: '🎯 RACE WEEK', dist: '—', notes: 'Rest, rest, rest. Short 3km shakeout 2 days before.' });
+    } else if (isTaperWeek) {
+      trainingRows.push({ day: `Week ${w}`, session: 'Taper', dist: '15–20 km total', notes: 'Reduce volume 40%. Keep intensity. Trust the process.' });
+    } else if (w === 1) {
+      trainingRows.push({ day: `Week ${w}`, session: 'Base Building', dist: `${Math.min(20, goalDist*0.3).toFixed(0)}–${Math.min(25, goalDist*0.4).toFixed(0)} km`, notes: 'Easy runs only. 3 runs this week. Build the habit.' });
+    } else {
+      const weekKm = Math.min(goalDist * 0.6, 20 + w * 5);
+      trainingRows.push({ day: `Week ${w}`, session: w % 2 === 0 ? 'Long Run Week' : 'Speed Work Week', dist: `${Math.round(weekKm)}–${Math.round(weekKm*1.1)} km`, notes: w % 2 === 0 ? `Long run: ${Math.min(goalDist*0.7, longestRun*1.2).toFixed(0)} km easy` : '1 tempo + 2 easy runs' });
+    }
   }
 
+  // Nutrition during run
+  const fuelStops = [];
+  for (let km = 10; km < goalDist; km += 10) {
+    fuelStops.push({
+      km,
+      food: km <= 20 ? '2–3 dates + ½ banana' : km <= 40 ? 'Banana + chikki bar' : 'Bread + dates + toffees',
+      hydration: km % 20 === 0 ? 'Electrolyte water 300ml' : 'Water 200ml + salt pinch'
+    });
+  }
+
+  const plan = `
+<h3>🎯 Goal Assessment</h3>
+<p>Target: <strong>${goalLabel}</strong> on ${new Date(targetDate).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} — <strong>${daysUntil} days away</strong>.</p>
+<p>Your longest run is <strong>${longestRun} km</strong>. ${goalDist > longestRun ? `This is ${(goalDist - longestRun).toFixed(1)} km beyond your longest effort — ` : 'You have the base for this — '}feasibility: <strong>${feasibility}</strong>.</p>
+<p>Predicted finish time: <strong>${riegelTime(goalDist)}</strong> based on your ${fiveK} 5K.</p>
+${runWalk === 'yes' ? '<p>Run-Walk strategy: <strong>8 min run / 2 min walk</strong> for first half, then <strong>5 min run / 3 min walk</strong> from halfway.</p>' : ''}
+${notes ? `<p>Notes considered: <em>${notes}</em></p>` : ''}
+
+<h3>⚡ Pace Strategy</h3>
+<table>
+<tr><th>Phase</th><th>KM Range</th><th>Target Pace</th><th>Feel</th></tr>
+${phases.map(p => `<tr><td>${p.phase}</td><td>${p.km} km</td><td><strong>${p.pace}/km</strong></td><td>${p.feel}</td></tr>`).join('')}
+</table>
+${isUltra ? '<p><strong>⚠️ Ultra Rule:</strong> Walk ALL uphills from halfway. No exceptions. Save your quads.</p>' : ''}
+
+<h3>📅 Training Plan (${daysUntil} days)</h3>
+<table>
+<tr><th>Period</th><th>Session Type</th><th>Volume</th><th>Key Notes</th></tr>
+${trainingRows.map(r => `<tr><td>${r.day}</td><td>${r.session}</td><td>${r.dist}</td><td>${r.notes}</td></tr>`).join('')}
+</table>
+<p>Running ${runsPerWeek} days/week — keep alternate days rest or walking only.</p>
+
+<h3>🎒 Race Day Bag</h3>
+<ul>
+<li><strong>Hydration:</strong> 2.5–3L water + 1L DIY electrolytes (salt + sugar + lemon)</li>
+<li><strong>Fuel:</strong> 200g dates, 4–5 bananas, 2 chikki bars, bread slices with jam</li>
+<li><strong>Snacks:</strong> Parle-G biscuits, 10–12 toffees/hard candy</li>
+<li><strong>First Aid:</strong> Vaseline (anti-chafe), 10+ band-aids, salt packets, Disprin (emergency)</li>
+<li><strong>Gear:</strong> Sunscreen SPF30+, cap/hat, charged phone + powerbank, headlamp (early morning)</li>
+<li><strong>Cash:</strong> ₹100–200 for emergency water/auto</li>
+<li><strong>Total cost: ~₹300–400</strong> — no gels needed!</li>
+</ul>
+
+<h3>🍌 Nutrition Guide</h3>
+<p><strong>Night Before:</strong> Big rice + dal dinner at 7–8 PM. 2 bananas after. Hydrate all day. Avoid spicy/oily food.</p>
+<p><strong>Race Morning (45 min before start):</strong> 2 rotis + peanut butter OR banana, 2–3 dates, 500ml water.</p>
+<table>
+<tr><th>KM</th><th>Food</th><th>Hydration</th></tr>
+<tr><td>0–10</td><td>Nothing solid</td><td>Plain water sips every 15 min</td></tr>
+${fuelStops.map(f => `<tr><td>${f.km}</td><td>${f.food}</td><td>${f.hydration}</td></tr>`).join('')}
+</table>
+<p><strong>⚠️ Key rule:</strong> Eat every 40–50 mins even if not hungry. Once you feel hunger, you're already behind on fuel.</p>
+
+<h3>🧠 Mental Strategy</h3>
+<ul>
+<li><strong>Never think about the total distance.</strong> Break it into chunks: "next 5 km", "next fuel stop", "next km marker".</li>
+<li><strong>The ${Math.round(goalDist*0.5)}K wall is real.</strong> Around halfway your glycogen dips — eat, sip electrolytes, walk if needed. It passes in 10–15 mins.</li>
+<li><strong>Make deals with yourself</strong> — never negotiate with stopping, only with slowing down. "I'll walk this hill then run the flat."</li>
+<li><strong>After ${Math.round(goalDist*0.8)} km</strong>, count down from ${Math.round(goalDist*0.2)}. You've done ${Math.round(goalDist*0.8)} km — you can do ${Math.round(goalDist*0.2)} more.</li>
+</ul>
+
+<h3>⚠️ Top Warnings</h3>
+<ul>
+<li><strong>Going out too fast:</strong> The first ${Math.round(goalDist*0.2)} km will feel easy. Resist hard. Run embarrassingly slow early — you'll thank yourself later.</li>
+<li><strong>Skipping fuel:</strong> ${isUltra ? 'At ultra distances, not eating is the #1 reason for DNFs. Set a timer to eat every 45 mins.' : 'Eat at every planned stop even if you feel fine.'}</li>
+<li><strong>Dehydration + over-hydration:</strong> Drink 400–500ml per hour. Always mix salt — plain water only can cause dangerous sodium drop (hyponatremia).</li>
+</ul>
+`;
+
+  thinking.style.display = 'none';
+  aiContent.style.display = 'block';
+  aiContent.innerHTML = plan;
   btn.disabled = false;
   btn.textContent = '✨ Generate My Plan';
 }
