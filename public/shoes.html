@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunLog — Shoe Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #080810; --surface: #10101a; --card: #16162a; --border: #252540; --accent: #FC4C02; --blue: #3a7bff; --green: #00e5a0; --yellow: #ffd166; --text: #f0f0ff; --soft: #9090b0; --muted: #505070; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+.sidebar { position: fixed; left:0; top:0; width: 220px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; color: var(--accent); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+.sidebar-nav { padding: 16px 0; flex: 1; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--soft); font-size: 13px; font-weight: 600; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(252,76,2,0.06); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+.athlete-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff7b3a); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; overflow: hidden; }
+.athlete-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.main { margin-left: 220px; flex: 1; padding: 32px 28px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; }
+.page-title span { color: var(--accent); }
+.section-tag { font-family: 'Syne Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+.panel-body { padding: 20px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #ff6a1f; transform: translateY(-1px); }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--soft); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-sm { padding: 6px 12px; font-size: 11px; }
+.btn-danger { background: rgba(230,57,70,0.15); color: #e63946; border: 1px solid rgba(230,57,70,0.3); }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; color: var(--soft); letter-spacing: 0.5px; margin-bottom: 6px; display: block; font-weight: 600; text-transform: uppercase; }
+.form-input, .form-select { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Mulish', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
+.form-input:focus, .form-select:focus { border-color: var(--accent); }
+.shoe-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 12px; position: relative; overflow: hidden; }
+.shoe-card::before { content: ''; position: absolute; left:0; top:0; bottom:0; width: 3px; }
+.shoe-card.good::before { background: var(--green); }
+.shoe-card.warning::before { background: var(--yellow); }
+.shoe-card.retired::before { background: var(--muted); opacity: 0.5; }
+.shoe-card.danger::before { background: #e63946; }
+.shoe-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.shoe-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 3px; }
+.shoe-brand { font-size: 12px; color: var(--muted); }
+.shoe-km { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; color: var(--accent); line-height: 1; }
+.shoe-km-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.shoe-progress-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 10px 0; }
+.shoe-progress-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+.shoe-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+.shoe-meta-item { font-size: 11px; color: var(--muted); }
+.shoe-meta-item strong { color: var(--text); display: block; font-size: 13px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 400px; margin: 20px; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 20px; }
+@media (max-width: 900px) { .sidebar{display:none;} .main{margin-left:0;padding:20px 16px;} }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">RUNLOG</div>
+    <div class="logo-sub">ABHINAV'S RUNNING HUB</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a href="/activities" class="nav-item"><span class="nav-icon">🏃</span> Activities</a>
+    <a href="/analytics" class="nav-item"><span class="nav-icon">📊</span> Analytics</a>
+    <a href="/routes" class="nav-item"><span class="nav-icon">🗺️</span> Routes</a>
+    <a href="/goals" class="nav-item"><span class="nav-icon">🎯</span> Goals</a>
+    <a href="/planner" class="nav-item"><span class="nav-icon">✨</span> AI Planner</a>
+    <a href="/shoes" class="nav-item active"><span class="nav-icon">👟</span> Shoe Tracker</a>
+    <a href="/journal" class="nav-item"><span class="nav-icon">📓</span> Run Journal</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="athlete-avatar" id="avatarEl">A</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;" id="athleteName">Abhinav</div>
+        <div style="font-size:10px;color:var(--muted);">Runner</div>
+      </div>
+    </div>
+    <a href="/api/logout" style="display:block;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:none;">↩ Logout</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="section-tag">Gear</div>
+      <div class="page-title">Shoe <span>Tracker</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal()">+ Add Shoe</button>
+  </div>
+
+  <div class="panel" style="background:linear-gradient(135deg,#1a0d00,var(--card));border-color:rgba(252,76,2,0.3);">
+    <div class="panel-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div style="font-size:32px;">👟</div>
+      <div style="flex:1;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;">Shoe Health Alert System</div>
+        <div style="font-size:12px;color:var(--soft);margin-top:3px;">Running shoes last 500–800 km. Beyond that, cushioning breaks down and injury risk increases. Track yours here.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="shoesList"></div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">Add Running Shoe</div>
+    <div class="form-group">
+      <label class="form-label">Shoe Name</label>
+      <input type="text" class="form-input" id="shoeName" placeholder="e.g. Nike Pegasus 40">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Brand</label>
+      <input type="text" class="form-input" id="shoeBrand" placeholder="e.g. Nike, Adidas, ASICS">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Starting KM (if not 0)</label>
+      <input type="number" class="form-input" id="shoeStartKm" placeholder="0" value="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Max Life (km)</label>
+      <select class="form-select" id="shoeMaxKm">
+        <option value="500">500 km (road shoes)</option>
+        <option value="600" selected>600 km (training shoes)</option>
+        <option value="700">700 km (trail shoes)</option>
+        <option value="800">800 km (max cushion)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date Added</label>
+      <input type="date" class="form-input" id="shoeDate">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveShoe()" style="flex:1;">Add Shoe</button>
+      <button class="btn btn-outline" onclick="document.getElementById('modalOverlay').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function getShoes() {
+  try { return JSON.parse(localStorage.getItem('runlog_shoes') || '[]'); } catch { return []; }
+}
+function saveShoes(shoes) { localStorage.setItem('runlog_shoes', JSON.stringify(shoes)); }
+
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('shoeDate').value = new Date().toISOString().split('T')[0];
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function saveShoe() {
+  const name = document.getElementById('shoeName').value.trim();
+  const brand = document.getElementById('shoeBrand').value.trim();
+  if (!name) { alert('Please enter a shoe name!'); return; }
+  const shoes = getShoes();
+  shoes.push({
+    id: Date.now(),
+    name, brand,
+    startKm: parseFloat(document.getElementById('shoeStartKm').value) || 0,
+    maxKm: parseInt(document.getElementById('shoeMaxKm').value),
+    date: document.getElementById('shoeDate').value,
+    retired: false
+  });
+  saveShoes(shoes);
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('shoeName').value = '';
+  document.getElementById('shoeBrand').value = '';
+  renderShoes(window._totalKm || 0);
+}
+
+function deleteShoe(id) {
+  if (!confirm('Delete this shoe?')) return;
+  saveShoes(getShoes().filter(s => s.id !== id));
+  renderShoes(window._totalKm || 0);
+}
+
+function retireShoe(id) {
+  saveShoes(getShoes().map(s => s.id === id ? {...s, retired: !s.retired} : s));
+  renderShoes(window._totalKm || 0);
+}
+
+function renderShoes(totalKm) {
+  const shoes = getShoes();
+  if (!shoes.length) {
+    document.getElementById('shoesList').innerHTML = `
+      <div style="text-align:center;padding:60px;background:var(--card);border:1px solid var(--border);border-radius:12px;">
+        <div style="font-size:48px;margin-bottom:16px;">👟</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;margin-bottom:8px;">No shoes added yet</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Add your running shoes to track their mileage and health</div>
+        <button onclick="openModal()" style="background:var(--accent);color:white;border:none;padding:12px 24px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;">+ Add Your First Shoe</button>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('shoesList').innerHTML = shoes.map(shoe => {
+    const km = shoe.startKm + (shoe.retired ? 0 : totalKm * 0.7); // estimate
+    const pct = Math.min(100, Math.round((km / shoe.maxKm) * 100));
+    const remaining = Math.max(0, shoe.maxKm - km);
+    let status, color, statusClass;
+    if (shoe.retired) { status = 'Retired'; color = 'var(--muted)'; statusClass = 'retired'; }
+    else if (pct >= 100) { status = 'Replace Now!'; color = '#e63946'; statusClass = 'danger'; }
+    else if (pct >= 80) { status = 'Replace Soon'; color = 'var(--yellow)'; statusClass = 'warning'; }
+    else { status = 'Good'; color = 'var(--green)'; statusClass = 'good'; }
+
+    return `<div class="shoe-card ${statusClass}">
+      <div class="shoe-header">
+        <div>
+          <div class="shoe-name">👟 ${shoe.name}</div>
+          <div class="shoe-brand">${shoe.brand || 'Unknown brand'}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="shoe-km">${Math.round(km)}</div>
+          <div class="shoe-km-label">km used</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--soft);margin-bottom:6px;">
+        <span style="color:${color};font-weight:600;">${status}</span>
+        <span>${pct}% · ${Math.round(remaining)} km left</span>
+      </div>
+      <div class="shoe-progress-track">
+        <div class="shoe-progress-fill" style="width:${pct}%;background:${color};"></div>
+      </div>
+      <div class="shoe-meta">
+        <div class="shoe-meta-item"><strong>${shoe.maxKm} km</strong>Max Life</div>
+        <div class="shoe-meta-item"><strong>${new Date(shoe.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</strong>Added</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button onclick="retireShoe(${shoe.id})" class="btn btn-outline btn-sm">${shoe.retired?'Unretire':'Retire'}</button>
+        <button onclick="deleteShoe(${shoe.id})" class="btn btn-danger btn-sm">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadData() {
+  try {
+    const res = await fetch('/api/activities?per_page=50');
+    if (!res.ok) { window.location.href='/'; return; }
+    const activities = await res.json();
+    const totalKm = activities.reduce((s,a) => s+a.distance/1000, 0);
+    window._totalKm = totalKm;
+    renderShoes(totalKm);
+  } catch(e) { window.location.href='/'; }
+}
+
+async function loadAthlete() {
+  try {
+    const res = await fetch('/api/athlete');
+    if (!res.ok) return;
+    const athlete = await res.json();
+    document.getElementById('athleteName').textContent = athlete.firstname+' '+athlete.lastname;
+    if (athlete.profile_medium) document.getElementById('avatarEl').innerHTML=`<img src="${athlete.profile_medium}">`;
+  } catch(e) {}
+}
+
+loadData();
+loadAthlete();
+</script>
+</body>
+</html>

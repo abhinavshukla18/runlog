@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunLog — Run Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Mulish:wght@300;400;500;600&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #080810; --surface: #10101a; --card: #16162a; --border: #252540; --accent: #FC4C02; --blue: #3a7bff; --green: #00e5a0; --yellow: #ffd166; --text: #f0f0ff; --soft: #9090b0; --muted: #505070; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Mulish', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+.sidebar { position: fixed; left:0; top:0; width: 220px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; color: var(--accent); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+.sidebar-nav { padding: 16px 0; flex: 1; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--soft); font-size: 13px; font-weight: 600; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(252,76,2,0.06); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+.athlete-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff7b3a); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; overflow: hidden; }
+.athlete-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.main { margin-left: 220px; flex: 1; padding: 32px 28px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; }
+.page-title span { color: var(--accent); }
+.section-tag { font-family: 'Syne Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+.panel-body { padding: 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: white; width: 100%; justify-content: center; margin-top: 4px; }
+.btn-primary:hover { background: #ff6a1f; }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-danger { background: rgba(230,57,70,0.15); color: #e63946; border: 1px solid rgba(230,57,70,0.3); }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; color: var(--soft); letter-spacing: 0.5px; margin-bottom: 6px; display: block; font-weight: 600; text-transform: uppercase; }
+.form-input, .form-select, .form-textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Mulish', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 100px; }
+.mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 4px; }
+.mood-btn { padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; font-size: 20px; transition: all 0.2s; }
+.mood-btn:hover, .mood-btn.selected { border-color: var(--accent); background: rgba(252,76,2,0.1); transform: scale(1.1); }
+.journal-entry { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 10px; transition: border-color 0.2s; }
+.journal-entry:hover { border-color: #353555; }
+.entry-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.entry-date { font-family: 'Syne Mono', monospace; font-size: 11px; color: var(--muted); }
+.entry-mood { font-size: 20px; }
+.entry-run { font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--accent); }
+.entry-note { font-size: 13px; color: var(--soft); line-height: 1.7; }
+.entry-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.entry-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+.run-selector { max-height: 200px; overflow-y: auto; }
+.run-option { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 12px; transition: background 0.15s; display: flex; justify-content: space-between; }
+.run-option:hover { background: rgba(255,255,255,0.02); }
+.run-option.selected { background: rgba(252,76,2,0.08); border-left: 2px solid var(--accent); }
+.loading { display: flex; align-items: center; justify-content: center; padding: 30px; color: var(--muted); font-size: 13px; gap: 10px; }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 900px) { .sidebar{display:none;} .main{margin-left:0;padding:20px 16px;} .two-col{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">RUNLOG</div>
+    <div class="logo-sub">ABHINAV'S RUNNING HUB</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a href="/activities" class="nav-item"><span class="nav-icon">🏃</span> Activities</a>
+    <a href="/analytics" class="nav-item"><span class="nav-icon">📊</span> Analytics</a>
+    <a href="/routes" class="nav-item"><span class="nav-icon">🗺️</span> Routes</a>
+    <a href="/goals" class="nav-item"><span class="nav-icon">🎯</span> Goals</a>
+    <a href="/planner" class="nav-item"><span class="nav-icon">✨</span> AI Planner</a>
+    <a href="/shoes" class="nav-item"><span class="nav-icon">👟</span> Shoe Tracker</a>
+    <a href="/journal" class="nav-item active"><span class="nav-icon">📓</span> Run Journal</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="athlete-avatar" id="avatarEl">A</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;" id="athleteName">Abhinav</div>
+        <div style="font-size:10px;color:var(--muted);">Runner</div>
+      </div>
+    </div>
+    <a href="/api/logout" style="display:block;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:none;">↩ Logout</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="section-tag">Diary</div>
+      <div class="page-title">Run <span>Journal</span></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- ENTRY FORM -->
+    <div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">New Entry</div></div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label class="form-label">Link to Run</label>
+            <div class="run-selector" id="runSelector">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">How did it feel?</label>
+            <div class="mood-grid">
+              <div class="mood-btn" onclick="selectMood('😴','Exhausted')" title="Exhausted">😴</div>
+              <div class="mood-btn" onclick="selectMood('😤','Tough')" title="Tough">😤</div>
+              <div class="mood-btn" onclick="selectMood('😊','Good')" title="Good">😊</div>
+              <div class="mood-btn" onclick="selectMood('⚡','Strong')" title="Strong">⚡</div>
+              <div class="mood-btn" onclick="selectMood('🔥','On Fire')" title="On Fire">🔥</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea class="form-textarea" id="journalNote" placeholder="How did the run go? Any highlights, struggles, or observations..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags (comma separated)</label>
+            <input type="text" class="form-input" id="journalTags" placeholder="e.g. morning, hills, pb attempt">
+          </div>
+          <button class="btn btn-primary" onclick="saveEntry()">💾 Save Entry</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENTRIES LIST -->
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Journal Entries</div>
+          <span id="entryCount" style="font-size:11px;color:var(--muted);font-family:'Syne Mono',monospace;">0 entries</span>
+        </div>
+        <div id="entriesList" style="max-height:600px;overflow-y:auto;">
+          <div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">No entries yet. Log your first run!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let selectedMood = '😊';
+let selectedMoodLabel = 'Good';
+let selectedRunId = null;
+let selectedRunName = null;
+
+function selectMood(emoji, label) {
+  selectedMood = emoji;
+  selectedMoodLabel = label;
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+}
+
+function getEntries() {
+  try { return JSON.parse(localStorage.getItem('runlog_journal') || '[]'); } catch { return []; }
+}
+function saveEntries(entries) { localStorage.setItem('runlog_journal', JSON.stringify(entries)); }
+
+function saveEntry() {
+  const note = document.getElementById('journalNote').value.trim();
+  if (!note) { alert('Please write something!'); return; }
+  const tags = document.getElementById('journalTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const entries = getEntries();
+  entries.unshift({
+    id: Date.now(),
+    date: new Date().toISOString(),
+    mood: selectedMood,
+    moodLabel: selectedMoodLabel,
+    runId: selectedRunId,
+    runName: selectedRunName,
+    note,
+    tags
+  });
+  saveEntries(entries);
+  document.getElementById('journalNote').value = '';
+  document.getElementById('journalTags').value = '';
+  selectedRunId = null;
+  selectedRunName = null;
+  document.querySelectorAll('.run-option').forEach(r => r.classList.remove('selected'));
+  renderEntries();
+}
+
+function deleteEntry(id) {
+  saveEntries(getEntries().filter(e => e.id !== id));
+  renderEntries();
+}
+
+function renderEntries() {
+  const entries = getEntries();
+  document.getElementById('entryCount').textContent = `${entries.length} entries`;
+  if (!entries.length) {
+    document.getElementById('entriesList').innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">No entries yet. Log your first run!</div>';
+    return;
+  }
+  document.getElementById('entriesList').innerHTML = entries.map(e => `
+    <div class="journal-entry">
+      <div class="entry-header">
+        <div>
+          <div class="entry-date">${new Date(e.date).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</div>
+          ${e.runName ? `<div class="entry-run">🏃 ${e.runName}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="entry-mood" title="${e.moodLabel}">${e.mood}</span>
+          <button onclick="deleteEntry(${e.id})" class="btn btn-danger btn-sm">×</button>
+        </div>
+      </div>
+      <div class="entry-note">${e.note}</div>
+      ${e.tags.length ? `<div class="entry-tags">${e.tags.map(t=>`<span class="entry-tag">#${t}</span>`).join('')}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function loadRuns() {
+  try {
+    const res = await fetch('/api/activities?per_page=20');
+    if (!res.ok) { window.location.href='/'; return; }
+    const activities = await res.json();
+    document.getElementById('runSelector').innerHTML = activities.slice(0,15).map(a => {
+      const date = new Date(a.start_date_local.replace('Z','+05:30')).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+      const dist = (a.distance/1000).toFixed(1);
+      return `<div class="run-option" onclick="selectRun(${a.id},'${a.name.replace(/'/g,"\\'")}',this)">
+        <span>${a.name}</span>
+        <span style="color:var(--accent);font-family:'Syne Mono',monospace;">${dist}km · ${date}</span>
+      </div>`;
+    }).join('') + '<div class="run-option" onclick="selectRun(null,null,this)" style="color:var(--muted);">No specific run</div>';
+  } catch(e) {}
+}
+
+function selectRun(id, name, el) {
+  selectedRunId = id;
+  selectedRunName = name;
+  document.querySelectorAll('.run-option').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function loadAthlete() {
+  try {
+    const res = await fetch('/api/athlete');
+    if (!res.ok) return;
+    const athlete = await res.json();
+    document.getElementById('athleteName').textContent = athlete.firstname+' '+athlete.lastname;
+    if (athlete.profile_medium) document.getElementById('avatarEl').innerHTML=`<img src="${athlete.profile_medium}">`;
+  } catch(e) {}
+}
+
+loadRuns();
+renderEntries();
+loadAthlete();
+</script>
+</body>
+</html>
